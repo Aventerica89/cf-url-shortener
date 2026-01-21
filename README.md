@@ -1,6 +1,6 @@
 # URL Shortener
 
-A simple, fast URL shortener built with Cloudflare Workers and D1 database.
+A simple, fast, multi-user URL shortener built with Cloudflare Workers and D1 database. Features automatic deployment via GitHub Actions.
 
 **Live:** https://links.jbcloud.app  
 **Admin:** https://links.jbcloud.app/admin
@@ -8,16 +8,31 @@ A simple, fast URL shortener built with Cloudflare Workers and D1 database.
 ## Features
 
 - ⚡ Fast redirects via Cloudflare's edge network
-- 📊 Click tracking
+- 👥 Multi-user support (each user has private links)
+- 🔐 Authentication via Cloudflare Access (Google, GitHub, Email)
+- 📊 Click tracking per link
+- 📤 Export/Import links as JSON
 - 🎨 Clean admin interface
+- 🚀 Auto-deploy on git push
 - 💰 Free tier friendly (100k requests/day)
 - 🔒 No surprise billing
 
 ## Stack
 
-- **Cloudflare Workers** - Serverless compute
-- **Cloudflare D1** - SQLite database at the edge
-- **No frameworks** - Pure JavaScript, ~150 lines
+- **Cloudflare Workers** - Serverless compute at the edge
+- **Cloudflare D1** - SQLite database
+- **Cloudflare Access** - Authentication (free for 50 users)
+- **GitHub Actions** - CI/CD auto-deployment
+- **No frameworks** - Pure JavaScript, ~200 lines
+
+## Why This Exists
+
+Originally attempted to self-host [Shlink](https://shlink.io/) on xCloud.host via Docker Compose, but ran into issues:
+- Docker command permissions (`permission denied` for `docker exec`)
+- Couldn't expose second port (8081) for admin UI
+- Logs page wasn't working in xCloud dashboard
+
+Cloudflare Workers + D1 turned out to be simpler, faster, and free.
 
 ## API Endpoints
 
@@ -178,13 +193,30 @@ wrangler deploy
 url-shortener/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml    # Auto-deploy on push
-├── worker.js             # Single-user version
-├── worker-multiuser.js   # Multi-user with auth
-├── wrangler.toml         # Cloudflare config
-├── schema.sql            # Single-user database
-├── schema-multiuser.sql  # Multi-user database
+│       └── deploy.yml        # Auto-deploy on push to main
+├── worker.js                 # Single-user version (original)
+├── worker-multiuser.js       # Multi-user with Cloudflare Access auth
+├── wrangler.toml             # Cloudflare Workers config
+├── schema.sql                # Single-user database schema
+├── schema-multiuser.sql      # Multi-user database schema
+├── .gitignore
 └── README.md
+```
+
+## Choosing Single vs Multi-User
+
+| Feature | `worker.js` | `worker-multiuser.js` |
+|---------|-------------|----------------------|
+| Auth required | No | Yes (Cloudflare Access) |
+| Multiple users | No (shared pool) | Yes (private links per user) |
+| Export/Import | No | Yes |
+| Stats dashboard | No | Yes |
+| Setup complexity | Simple | Moderate |
+
+To switch versions, update `main` in `wrangler.toml`:
+```toml
+main = "worker.js"           # Single-user
+main = "worker-multiuser.js" # Multi-user
 ```
 
 ## Database Schema
@@ -308,31 +340,73 @@ Public redirects (`/shortcode`) don't require login - only admin/API routes do.
 
 ## Automated Deployment (CI/CD)
 
-Push to GitHub and it auto-deploys to Cloudflare. No manual editing in the dashboard.
+Push to GitHub and it auto-deploys to Cloudflare. No manual dashboard editing needed.
 
-### Setup
+### Setup GitHub Actions
 
-1. **Get Cloudflare API Token**
-   - Cloudflare Dashboard → My Profile → API Tokens
-   - Create Token → "Edit Cloudflare Workers" template
-   - Copy token
+**1. Create Cloudflare API Token**
 
-2. **Get Account ID**
-   - Cloudflare Dashboard → Workers & Pages → Overview
-   - Copy Account ID from the right sidebar
+- Go to: Cloudflare Dashboard → My Profile (top right) → API Tokens
+- Click "Create Token"
+- Use template: **"Edit Cloudflare Workers"**
+- Configure permissions (these should be pre-filled):
+  - Account | Workers Agents Configuration | Edit
+  - User | Memberships | Read
+  - Account | Workers Observability | Edit
+  - Account | Containers | Edit
+- Account Resources: Include → **Your Account Name**
+- Zone Resources: Include → **All zones** (or specific zone)
+- Click "Continue to summary" → "Create Token"
+- **Copy the token immediately** (you won't see it again!)
 
-3. **Add GitHub Secrets**
-   - Repo → Settings → Secrets and variables → Actions
-   - Add `CLOUDFLARE_API_TOKEN`
-   - Add `CLOUDFLARE_ACCOUNT_ID`
+**2. Get your Account ID**
 
-4. **Push to main**
-   - Every push to `main` branch triggers deploy
-   - Or manually trigger in Actions tab
+- Go to: Cloudflare Dashboard → Workers & Pages
+- Your Account ID is in the right sidebar, or in the URL
+
+**3. Add Secrets to GitHub**
+
+- Go to: Your repo → Settings → Secrets and variables → Actions
+- Click "New repository secret"
+- Add two secrets:
+
+| Name | Value |
+|------|-------|
+| `CLOUDFLARE_API_TOKEN` | Your API token from step 1 |
+| `CLOUDFLARE_ACCOUNT_ID` | Your account ID from step 2 |
+
+**4. Push to Deploy**
+
+- Every push to `main` branch triggers auto-deploy
+- Or manually trigger: Actions tab → "Deploy to Cloudflare Workers" → "Run workflow"
+- Deploys in ~30 seconds
 
 ### Workflow File
 
-The workflow is in `.github/workflows/deploy.yml`
+Located at `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+```
 
 ---
 
