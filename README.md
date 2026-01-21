@@ -176,9 +176,14 @@ wrangler deploy
 
 ```
 url-shortener/
-├── worker.js        # Main worker code + admin HTML
-├── wrangler.toml    # Cloudflare configuration
-├── schema.sql       # Database schema
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    # Auto-deploy on push
+├── worker.js             # Single-user version
+├── worker-multiuser.js   # Multi-user with auth
+├── wrangler.toml         # Cloudflare config
+├── schema.sql            # Single-user database
+├── schema-multiuser.sql  # Multi-user database
 └── README.md
 ```
 
@@ -298,6 +303,36 @@ Public redirects (`/shortcode`) don't require login - only admin/API routes do.
 - Users can only delete their own links
 - Export only includes the user's own links
 - Cloudflare Access handles all auth - no passwords stored
+
+---
+
+## Automated Deployment (CI/CD)
+
+Push to GitHub and it auto-deploys to Cloudflare. No manual editing in the dashboard.
+
+### Setup
+
+1. **Get Cloudflare API Token**
+   - Cloudflare Dashboard → My Profile → API Tokens
+   - Create Token → "Edit Cloudflare Workers" template
+   - Copy token
+
+2. **Get Account ID**
+   - Cloudflare Dashboard → Workers & Pages → Overview
+   - Copy Account ID from the right sidebar
+
+3. **Add GitHub Secrets**
+   - Repo → Settings → Secrets and variables → Actions
+   - Add `CLOUDFLARE_API_TOKEN`
+   - Add `CLOUDFLARE_ACCOUNT_ID`
+
+4. **Push to main**
+   - Every push to `main` branch triggers deploy
+   - Or manually trigger in Actions tab
+
+### Workflow File
+
+The workflow is in `.github/workflows/deploy.yml`
 
 ---
 
