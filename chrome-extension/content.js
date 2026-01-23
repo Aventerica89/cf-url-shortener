@@ -4,11 +4,10 @@
 (function() {
   'use strict';
 
-  // Configuration
   const BUTTON_CLASS = 'artifact-manager-save-btn';
   const PROCESSED_ATTR = 'data-artifact-manager-processed';
 
-  // Debounce function
+  // Debounce helper
   function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -17,7 +16,7 @@
     };
   }
 
-  // Create save button element
+  // Create save button
   function createSaveButton() {
     const button = document.createElement('button');
     button.className = BUTTON_CLASS;
@@ -33,10 +32,10 @@
     return button;
   }
 
-  // Extract artifact data from an artifact element
-  function extractArtifactData(artifactElement) {
+  // Extract artifact data from the panel
+  function extractArtifactData(panel) {
     const data = {
-      name: '',
+      name: 'Untitled Artifact',
       description: '',
       artifact_type: 'code',
       source_type: 'downloaded',
@@ -45,110 +44,55 @@
       conversation_url: window.location.href
     };
 
-    // Try to find the artifact title/name
-    // Claude.ai uses various selectors depending on the artifact type
-    const titleSelectors = [
-      '[data-testid="artifact-title"]',
-      '.artifact-title',
-      '[class*="artifact"] h1',
-      '[class*="artifact"] h2',
-      '[class*="artifact"] [class*="title"]',
-      '[class*="ArtifactTitle"]'
-    ];
-
-    for (const selector of titleSelectors) {
-      const titleEl = artifactElement.querySelector(selector);
-      if (titleEl && titleEl.textContent.trim()) {
-        data.name = titleEl.textContent.trim();
+    // Find the artifact title - look for text content in the header area
+    // The title appears as text like "Smith event options" with type "HTML" nearby
+    const headerTexts = panel.querySelectorAll('div, span');
+    for (const el of headerTexts) {
+      const text = el.textContent.trim();
+      // Skip very short or very long text, and skip known labels
+      if (text.length > 2 && text.length < 100 &&
+          !['Copy', 'HTML', 'Code', 'Preview', 'Download'].includes(text) &&
+          !el.querySelector('*')) { // Only leaf text nodes
+        data.name = text;
         break;
       }
     }
 
-    // If no title found, try the artifact container's closest heading
-    if (!data.name) {
-      const parent = artifactElement.closest('[class*="message"]') || artifactElement.parentElement;
-      if (parent) {
-        const headings = parent.querySelectorAll('h1, h2, h3, strong');
-        for (const h of headings) {
-          const text = h.textContent.trim();
-          if (text && text.length < 100) {
-            data.name = text;
-            break;
-          }
-        }
-      }
-    }
-
-    // Fallback name
-    if (!data.name) {
-      data.name = 'Untitled Artifact';
-    }
-
-    // Try to get the artifact content
-    const codeSelectors = [
-      'pre code',
-      'pre',
-      '[class*="code"]',
-      'code',
-      '[class*="CodeBlock"]'
-    ];
-
-    for (const selector of codeSelectors) {
-      const codeEl = artifactElement.querySelector(selector);
-      if (codeEl && codeEl.textContent.trim()) {
-        data.file_content = codeEl.textContent.trim();
-
-        // Try to detect language from class
-        const classes = codeEl.className || '';
-        const langMatch = classes.match(/language-(\w+)/);
-        if (langMatch) {
-          data.language = langMatch[1];
-        }
-        break;
-      }
-    }
-
-    // Detect artifact type based on content or language
-    const content = data.file_content.toLowerCase();
-    const lang = data.language.toLowerCase();
-
-    if (lang === 'html' || content.includes('<!doctype html') || content.includes('<html')) {
+    // Detect artifact type from the panel
+    const panelText = panel.textContent.toLowerCase();
+    if (panelText.includes('html')) {
       data.artifact_type = 'html';
-    } else if (lang === 'svg' || content.startsWith('<svg')) {
-      data.artifact_type = 'image';
-    } else if (lang === 'json' || lang === 'csv') {
-      data.artifact_type = 'data';
-    } else if (lang === 'markdown' || lang === 'md' || lang === 'text') {
-      data.artifact_type = 'document';
-    } else {
+      data.language = 'HTML';
+    } else if (panelText.includes('react') || panelText.includes('jsx')) {
       data.artifact_type = 'code';
+      data.language = 'React';
+    } else if (panelText.includes('python')) {
+      data.artifact_type = 'code';
+      data.language = 'Python';
+    } else if (panelText.includes('javascript') || panelText.includes('typescript')) {
+      data.artifact_type = 'code';
+      data.language = 'JavaScript';
     }
 
-    // Try to get description from surrounding text
-    const messageContainer = artifactElement.closest('[class*="message"]');
-    if (messageContainer) {
-      const paragraphs = messageContainer.querySelectorAll('p');
-      for (const p of paragraphs) {
-        const text = p.textContent.trim();
-        if (text && text.length > 20 && text.length < 500) {
-          data.description = text;
-          break;
-        }
-      }
+    // Try to get content by clicking Copy button and reading clipboard
+    // This is async and may not always work
+    const copyBtn = panel.querySelector('button[aria-label*="Copy"], button:has(svg)');
+    if (copyBtn) {
+      data._copyButton = copyBtn; // Store reference for later
     }
 
     return data;
   }
 
   // Handle save button click
-  async function handleSaveClick(event, artifactElement) {
+  async function handleSaveClick(event, panel) {
     event.preventDefault();
     event.stopPropagation();
 
     const button = event.currentTarget;
     const originalContent = button.innerHTML;
 
-    // Show loading state
+    // Show loading
     button.innerHTML = `
       <svg class="artifact-manager-spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 12a9 9 0 11-6.219-8.56"/>
@@ -158,10 +102,23 @@
     button.disabled = true;
 
     try {
-      // Extract artifact data
-      const artifactData = extractArtifactData(artifactElement);
+      const artifactData = extractArtifactData(panel);
 
-      // Send to background script
+      // Try to get content from clipboard by clicking Copy
+      if (artifactData._copyButton) {
+        try {
+          artifactData._copyButton.click();
+          await new Promise(r => setTimeout(r, 100));
+          const clipboardText = await navigator.clipboard.readText();
+          if (clipboardText && clipboardText.length > 10) {
+            artifactData.file_content = clipboardText;
+          }
+        } catch (e) {
+          console.log('Could not read clipboard:', e);
+        }
+        delete artifactData._copyButton;
+      }
+
       const response = await chrome.runtime.sendMessage({
         action: 'saveArtifact',
         data: artifactData
@@ -176,18 +133,12 @@
           <span>Saved!</span>
         `;
         button.classList.add('artifact-manager-success');
-
-        setTimeout(() => {
-          button.innerHTML = originalContent;
-          button.classList.remove('artifact-manager-success');
-          button.disabled = false;
-        }, 2000);
+        showNotification('Artifact saved to Artifact Manager!', 'success');
       } else {
         throw new Error(response.error || 'Failed to save');
       }
     } catch (error) {
       console.error('Artifact Manager: Save failed', error);
-
       button.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
@@ -197,16 +148,14 @@
         <span>Error</span>
       `;
       button.classList.add('artifact-manager-error');
-
-      // Show error notification
-      showNotification(error.message || 'Failed to save artifact. Check extension settings.', 'error');
-
-      setTimeout(() => {
-        button.innerHTML = originalContent;
-        button.classList.remove('artifact-manager-error');
-        button.disabled = false;
-      }, 3000);
+      showNotification(error.message || 'Failed to save artifact', 'error');
     }
+
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+      button.classList.remove('artifact-manager-success', 'artifact-manager-error');
+      button.disabled = false;
+    }, 2500);
   }
 
   // Show notification toast
@@ -219,140 +168,112 @@
     notification.textContent = message;
     document.body.appendChild(notification);
 
-    setTimeout(() => notification.remove(), 5000);
+    setTimeout(() => notification.remove(), 4000);
   }
 
-  // Find and process artifacts
+  // Find and process artifact panels
   function processArtifacts() {
-    // Claude.ai artifact selectors - these may need updates as Claude.ai evolves
-    const artifactSelectors = [
-      '[data-testid="artifact-container"]',
-      '[class*="artifact-container"]',
-      '[class*="ArtifactContainer"]',
-      '[class*="artifact"][class*="preview"]',
-      '[class*="code-block"]',
-      'pre:has(code)',
-      '[class*="CodeBlock"]'
-    ];
+    // Look for the artifact preview panel
+    // Based on the DOM, it contains an iframe from claudeusercontent.com
+    const iframes = document.querySelectorAll('iframe[src*="claudeusercontent.com"]');
 
-    for (const selector of artifactSelectors) {
-      try {
-        const artifacts = document.querySelectorAll(selector);
+    iframes.forEach(iframe => {
+      // Find the panel container (go up to find the header)
+      let panel = iframe.closest('div[class*="flex"]');
 
-        artifacts.forEach(artifact => {
-          // Skip if already processed
-          if (artifact.hasAttribute(PROCESSED_ATTR)) {
-            return;
-          }
-
-          // Skip if it's a very small element (probably not a real artifact)
-          if (artifact.offsetHeight < 50) {
-            return;
-          }
-
-          // Skip if no meaningful content
-          const content = artifact.textContent.trim();
-          if (content.length < 10) {
-            return;
-          }
-
-          // Mark as processed
-          artifact.setAttribute(PROCESSED_ATTR, 'true');
-
-          // Find or create button container
-          let buttonContainer = artifact.querySelector('.artifact-manager-btn-container');
-          if (!buttonContainer) {
-            buttonContainer = document.createElement('div');
-            buttonContainer.className = 'artifact-manager-btn-container';
-
-            // Try to find a good place to insert the button
-            // Look for existing action buttons/toolbar
-            const toolbarSelectors = [
-              '[class*="toolbar"]',
-              '[class*="actions"]',
-              '[class*="header"]',
-              '[class*="top"]'
-            ];
-
-            let inserted = false;
-            for (const tbSelector of toolbarSelectors) {
-              const toolbar = artifact.querySelector(tbSelector);
-              if (toolbar) {
-                toolbar.appendChild(buttonContainer);
-                inserted = true;
-                break;
-              }
-            }
-
-            if (!inserted) {
-              // Insert at the top of the artifact
-              artifact.style.position = 'relative';
-              artifact.insertBefore(buttonContainer, artifact.firstChild);
-            }
-          }
-
-          // Add save button if not already present
-          if (!buttonContainer.querySelector(`.${BUTTON_CLASS}`)) {
-            const saveButton = createSaveButton();
-            saveButton.addEventListener('click', (e) => handleSaveClick(e, artifact));
-            buttonContainer.appendChild(saveButton);
-          }
-        });
-      } catch (e) {
-        // Selector might not be valid, skip it
+      // Walk up to find a suitable container with the title
+      for (let i = 0; i < 10 && panel; i++) {
+        if (panel.querySelector('button') && panel.offsetWidth > 200) {
+          break;
+        }
+        panel = panel.parentElement;
       }
-    }
+
+      if (!panel || panel.hasAttribute(PROCESSED_ATTR)) return;
+      panel.setAttribute(PROCESSED_ATTR, 'true');
+
+      // Find where to insert the button - look for the Copy button
+      const copyButton = panel.querySelector('button');
+      if (copyButton) {
+        const buttonContainer = copyButton.parentElement;
+
+        // Check if we already added our button
+        if (buttonContainer && !buttonContainer.querySelector(`.${BUTTON_CLASS}`)) {
+          const saveButton = createSaveButton();
+          saveButton.addEventListener('click', (e) => handleSaveClick(e, panel));
+
+          // Insert before the copy button
+          buttonContainer.insertBefore(saveButton, copyButton);
+        }
+      }
+    });
+
+    // Also look for artifact mentions in the chat (the small preview cards)
+    const artifactCards = document.querySelectorAll('[class*="artifact"], [data-testid*="artifact"]');
+    artifactCards.forEach(card => {
+      if (card.hasAttribute(PROCESSED_ATTR)) return;
+      if (card.offsetHeight < 30 || card.offsetWidth < 100) return;
+
+      card.setAttribute(PROCESSED_ATTR, 'true');
+
+      // Add a subtle save indicator
+      const existingBtn = card.querySelector(`.${BUTTON_CLASS}`);
+      if (!existingBtn) {
+        const saveButton = createSaveButton();
+        saveButton.style.cssText = 'position: absolute; top: 4px; right: 4px; z-index: 100;';
+        saveButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Extract basic info from the card
+          const title = card.querySelector('[class*="title"], strong, b')?.textContent || 'Artifact';
+          const type = card.textContent.includes('HTML') ? 'html' : 'code';
+
+          handleSaveClick(e, card);
+        });
+
+        card.style.position = 'relative';
+        card.appendChild(saveButton);
+      }
+    });
   }
 
-  // Observe DOM changes to detect new artifacts
+  // Setup mutation observer
   function setupObserver() {
-    const debouncedProcess = debounce(processArtifacts, 500);
+    const debouncedProcess = debounce(processArtifacts, 300);
 
     const observer = new MutationObserver((mutations) => {
-      // Check if any mutations might have added new artifacts
-      let shouldProcess = false;
       for (const mutation of mutations) {
         if (mutation.addedNodes.length > 0) {
-          shouldProcess = true;
+          debouncedProcess();
           break;
         }
       }
-      if (shouldProcess) {
-        debouncedProcess();
-      }
     });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
+    observer.observe(document.body, { childList: true, subtree: true });
     return observer;
   }
 
   // Initialize
   function init() {
-    // Wait for page to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        processArtifacts();
-        setupObserver();
-      });
-    } else {
-      processArtifacts();
-      setupObserver();
-    }
+    console.log('Artifact Manager: Initializing...');
 
-    // Also process on URL changes (SPA navigation)
-    let lastUrl = location.href;
-    new MutationObserver(() => {
-      const url = location.href;
-      if (url !== lastUrl) {
-        lastUrl = url;
-        setTimeout(processArtifacts, 1000);
-      }
-    }).observe(document, { subtree: true, childList: true });
+    // Initial scan
+    setTimeout(processArtifacts, 1000);
+
+    // Watch for changes
+    setupObserver();
+
+    // Re-scan periodically (Claude.ai is very dynamic)
+    setInterval(processArtifacts, 3000);
+
+    console.log('Artifact Manager: Ready');
   }
 
-  init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
