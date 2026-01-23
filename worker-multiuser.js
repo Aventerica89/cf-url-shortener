@@ -837,9 +837,6 @@ function getAdminHTML(userEmail) {
     .toast-close { color: hsl(var(--muted-foreground)); cursor: pointer; background: none; border: none; }
     .toast-close:hover { color: hsl(var(--foreground)); }
 
-    /* Hidden file input */
-    input[type="file"] { display: none; }
-
     /* Responsive */
     @media (max-width: 1024px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -906,12 +903,17 @@ function getAdminHTML(userEmail) {
       </div>
 
       <div class="sidebar-footer">
-        <button class="user-button">
+        <button class="user-button" onclick="logout()">
           <div class="avatar">${userEmail.charAt(0).toUpperCase()}</div>
           <div class="user-info">
             <div class="user-name">${userEmail.split('@')[0]}</div>
             <div class="user-email">${userEmail}</div>
           </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: auto; opacity: 0.5;">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
         </button>
       </div>
     </aside>
@@ -951,15 +953,15 @@ function getAdminHTML(userEmail) {
             </svg>
             Export
           </button>
-          <label class="btn btn-outline btn-sm" style="cursor: pointer;">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" x2="12" y1="15" y2="3"/>
             </svg>
             Import
-            <input type="file" id="importFile" accept=".json" onchange="importLinks(event)">
-          </label>
+          </button>
+          <input type="file" id="importFile" accept=".json" onchange="importLinks(event)" style="display: none;">
         </div>
       </header>
 
@@ -1329,6 +1331,10 @@ function getAdminHTML(userEmail) {
     function exportLinks() {
       window.location.href = '/api/export';
       showToast('Exporting', 'Your links are being downloaded');
+    }
+
+    function logout() {
+      window.location.href = '/cdn-cgi/access/logout';
     }
 
     async function importLinks(event) {
