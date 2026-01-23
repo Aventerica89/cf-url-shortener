@@ -8,5 +8,5 @@ database_name = "url-shortener"
 database_id = "b47f73ea-a441-4f8f-986b-5080a7d2a1c9"
 
 [[routes]]
-pattern = "links.jbcloud.app/*"
+pattern = "links.jbcloud.app"
 custom_domain = true
