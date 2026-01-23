@@ -1374,7 +1374,20 @@ function getAppHtml(userEmail) {
     </nav>
 
     <div class="sidebar-footer">
-      <div>${safeEmail}</div>
+      <button class="btn btn-ghost" style="width: 100%; justify-content: flex-start; gap: 0.75rem;" id="logoutBtn">
+        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--indigo), var(--violet)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
+          ${safeEmail.charAt(0).toUpperCase()}
+        </div>
+        <div style="flex: 1; text-align: left; min-width: 0;">
+          <div style="font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeEmail.split('@')[0]}</div>
+          <div style="font-size: 11px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeEmail}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.5;">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" x2="9" y1="12" y2="12"/>
+        </svg>
+      </button>
     </div>
   </aside>
 
@@ -1389,7 +1402,7 @@ function getAppHtml(userEmail) {
         <input type="text" placeholder="Search artifacts... (Cmd+K)" id="search-input">
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="exportData()">
+        <button class="btn btn-secondary" id="exportBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
@@ -1397,7 +1410,7 @@ function getAppHtml(userEmail) {
           </svg>
           Export
         </button>
-        <button class="btn btn-secondary" onclick="document.getElementById('import-input').click()">
+        <button class="btn btn-secondary" id="importBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
@@ -1405,8 +1418,8 @@ function getAppHtml(userEmail) {
           </svg>
           Import
         </button>
-        <input type="file" id="import-input" accept=".json" style="display: none" onchange="importData(event)">
-        <button class="btn btn-primary" onclick="openCreateModal()">
+        <input type="file" id="import-input" accept=".json" style="display: none;">
+        <button class="btn btn-primary" id="addArtifactBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1641,6 +1654,19 @@ function getAppHtml(userEmail) {
 
       // Tags input
       setupTagsInput();
+
+      // Logout button
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        window.location.href = '/cdn-cgi/access/logout';
+      });
+
+      // Header action buttons
+      document.getElementById('exportBtn').addEventListener('click', exportData);
+      document.getElementById('importBtn').addEventListener('click', function() {
+        document.getElementById('import-input').click();
+      });
+      document.getElementById('import-input').addEventListener('change', importData);
+      document.getElementById('addArtifactBtn').addEventListener('click', openCreateModal);
     }
 
     async function loadStats() {
