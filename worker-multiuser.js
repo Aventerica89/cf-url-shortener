@@ -495,6 +495,8 @@ function getAdminHTML(userEmail) {
       text-align: left;
     }
     .user-button:hover { background: hsl(var(--accent)); }
+    .user-button-icon { margin-left: auto; opacity: 0.5; }
+    .hidden-input { display: none; }
     .avatar {
       width: 32px; height: 32px;
       border-radius: 50%;
@@ -909,7 +911,7 @@ function getAdminHTML(userEmail) {
             <div class="user-name">${userEmail.split('@')[0]}</div>
             <div class="user-email">${userEmail}</div>
           </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: auto; opacity: 0.5;">
+          <svg class="user-button-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" x2="9" y1="12" y2="12"/>
@@ -961,7 +963,7 @@ function getAdminHTML(userEmail) {
             </svg>
             Import
           </button>
-          <input type="file" id="importFile" accept=".json" style="display: none;">
+          <input type="file" id="importFile" accept=".json" class="hidden-input">
         </div>
       </header>
 
