@@ -18,6 +18,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '3.90.0'
           command: d1 execute url-shortener --remote --file=migrations.sql
         continue-on-error: true  # Migrations may already be applied
 
@@ -26,4 +27,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '3.90.0'
           command: deploy
