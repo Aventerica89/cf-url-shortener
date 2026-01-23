@@ -1938,8 +1938,8 @@ function getAppHtml(userEmail) {
     function escapeAttr(text) {
       if (!text) return '';
       return String(text)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
+        .replace(/\\\\/g, '\\\\\\\\')
+        .replace(/'/g, "\\\\'")
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
