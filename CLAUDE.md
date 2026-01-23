@@ -62,32 +62,58 @@ The UI uses Shadcn-style CSS variables. To test UI changes:
 
 ---
 
-## CURRENT ISSUE (January 2026)
+## ARTIFACT MANAGER APP (January 2026)
 
-### Problem: GitHub Actions deployment failing
+### What It Is
 
-**Error:** `Could not route to /client/v4/accounts/.../d1/database/... [code: 7003]`
+A **separate** Cloudflare Worker app for tracking Claude.ai artifacts. Lives in `artifacts-app/` directory. Now deployed and working at `artifact-manager.jbmd-creations.workers.dev`.
 
-**Root cause:** GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` were found to be empty.
+### Architecture - Two Separate Apps
 
-### What was done:
-1. Fixed `wrangler.toml` syntax: changed `[routes]` to `[[routes]]` (TOML array syntax)
-2. Pinned wrangler version to 3.90.0 in deploy.yml
-3. User re-entered the secrets
+| App | Directory | Worker Name | D1 Database ID | URL |
+|-----|-----------|-------------|----------------|-----|
+| URL Shortener | root | `url-shortener` | `b47f73ea-a441-4f8f-986b-5080a7d2a1c9` | `links.jbcloud.app` |
+| Artifact Manager | `artifacts-app/` | `artifact-manager` | `cf8e4875-7222-4186-8d57-be6ba55cc12a` | `artifact-manager.jbmd-creations.workers.dev` |
 
-### What still needs to happen:
-1. **Verify GitHub secrets are correctly saved:**
-   - Go to: https://github.com/Aventerica89/cf-url-shortener/settings/secrets/actions
-   - `CLOUDFLARE_ACCOUNT_ID` - 32-char hex string from Cloudflare dashboard (Workers & Pages → right sidebar)
-   - `CLOUDFLARE_API_TOKEN` - API token with permissions: Account → Workers Scripts → Edit, Account → D1 → Edit
+### Deployment - Two Separate Workflows
 
-2. **Re-run the workflow** after secrets are confirmed
+- `.github/workflows/deploy.yml` - URL shortener (any push to main)
+- `.github/workflows/deploy-artifacts.yml` - Artifact Manager (only `artifacts-app/**` changes)
 
-3. **If still failing**, check:
-   - Is the D1 database `url-shortener` (ID: `b47f73ea-a441-4f8f-986b-5080a7d2a1c9`) in the correct account?
-   - Does the API token have the right account selected when created?
+### Artifact Manager Features
 
-### New Shadcn UI ready to deploy:
-- `worker-multiuser.js` has the new dark theme with sidebar, categories, tags, AJAX search
-- `migrations.sql` has the schema for categories, tags, link_tags tables
-- Everything is merged to main, just needs successful deployment
+- Track published artifacts (claude.site URLs)
+- Track downloaded artifacts (local files)
+- Collections (folders) and Tags
+- Search, favorites, filtering
+- Export/Import JSON backup
+- Multi-user via Cloudflare Access
+- Dark Shadcn-style UI
+
+### Artifact Manager Files
+
+| File | Purpose |
+|------|---------|
+| `artifacts-app/worker.js` | Main worker (~2100 lines) |
+| `artifacts-app/migrations.sql` | D1 schema (collections, artifacts, tags, artifact_tags) |
+| `artifacts-app/wrangler.toml` | Worker config |
+| `artifacts-app/README.md` | Setup docs |
+
+### Security (Fixed via Gemini Review)
+
+All XSS vulnerabilities fixed:
+- `escapeAttr()` for JS string contexts (onclick handlers)
+- `escapeHtmlServer()` for server-side templating
+- `escapeHtml()` for client-side innerHTML
+
+### Known Issues / TODO
+
+1. **Logout button** - Email in sidebar footer needs logout functionality
+2. **Import button** - Needs testing (uploads JSON to restore artifacts)
+3. **Default collections** - Auto-creates on first visit via `/api/init`
+
+### User Info
+
+- Account: JBMD Creations
+- Email: john@jbmdcreations.com
+- Workers subdomain: jbmd-creations.workers.dev
