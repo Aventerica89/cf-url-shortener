@@ -117,3 +117,63 @@ All XSS vulnerabilities fixed:
 - Account: JBMD Creations
 - Email: john@jbmdcreations.com
 - Workers subdomain: jbmd-creations.workers.dev
+
+---
+
+## CHROME EXTENSION (January 2026)
+
+### What It Is
+
+A Chrome extension that adds a "Save to Artifact Manager" button on Claude.ai, allowing one-click saving of artifacts.
+
+### Location
+
+`chrome-extension/` directory (not deployed - local browser extension)
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `chrome-extension/manifest.json` | Extension configuration (MV3) |
+| `chrome-extension/content.js` | Runs on Claude.ai, adds save buttons |
+| `chrome-extension/content.css` | Styles for save buttons |
+| `chrome-extension/background.js` | Service worker for API calls |
+| `chrome-extension/popup.html` | Extension popup UI |
+| `chrome-extension/popup.js` | Popup logic |
+| `chrome-extension/generate-icons.html` | Tool to generate PNG icons |
+| `chrome-extension/README.md` | Installation & usage docs |
+
+### Installation
+
+1. Open `chrome-extension/generate-icons.html` in browser
+2. Download icons and place in `chrome-extension/icons/`
+3. Go to `chrome://extensions/`
+4. Enable Developer Mode
+5. Click "Load unpacked" and select `chrome-extension/` folder
+6. Configure Artifact Manager URL in extension popup
+
+### How It Works
+
+1. Content script detects artifacts on Claude.ai pages
+2. Adds purple "Save" button to each artifact
+3. Click sends artifact data to Artifact Manager API
+4. CORS headers on API allow cross-origin requests from claude.ai
+
+### CORS Configuration
+
+The Artifact Manager worker includes CORS headers to allow the extension to make API calls from claude.ai:
+
+```javascript
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://claude.ai',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Cf-Access-Jwt-Assertion',
+  'Access-Control-Allow-Credentials': 'true'
+};
+```
+
+### Limitations
+
+- Claude.ai UI changes may require content script updates
+- User must be logged into Cloudflare Access first
+- Artifact detection is heuristic-based (may miss some artifacts)

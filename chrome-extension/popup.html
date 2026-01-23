@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artifact Manager</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #09090b;
+      color: #fafafa;
+      width: 320px;
+      min-height: 200px;
+    }
+
+    .header {
+      padding: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .status-card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .status-card.connected {
+      border-color: #10b981;
+    }
+
+    .status-card.disconnected {
+      border-color: #ef4444;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #a1a1aa;
+    }
+
+    .status-card.connected .status-dot {
+      background: #10b981;
+    }
+
+    .status-card.disconnected .status-dot {
+      background: #ef4444;
+    }
+
+    .status-label {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a1a1aa;
+    }
+
+    .status-text {
+      font-size: 14px;
+      color: #fafafa;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 8px;
+      background: #27272a;
+      border-radius: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #a1a1aa;
+      text-transform: uppercase;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #a1a1aa;
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      color: #fafafa;
+      font-size: 13px;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: #6366f1;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+    }
+
+    .btn-secondary {
+      background: #27272a;
+      color: #fafafa;
+      border: 1px solid #3f3f46;
+    }
+
+    .btn-secondary:hover {
+      background: #3f3f46;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-group .btn {
+      flex: 1;
+    }
+
+    .message {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .divider {
+      height: 1px;
+      background: #27272a;
+      margin: 16px 0;
+    }
+
+    .help-text {
+      font-size: 11px;
+      color: #71717a;
+      margin-top: 4px;
+    }
+
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid #27272a;
+      font-size: 11px;
+      color: #71717a;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #6366f1;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #27272a;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+        <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+        <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/>
+      </svg>
+    </div>
+    <h1>Artifact Manager</h1>
+  </div>
+
+  <div class="content">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="main-content" style="display: none;">
+      <div id="status-card" class="status-card">
+        <div class="status-header">
+          <div class="status-dot"></div>
+          <span class="status-label">Connection Status</span>
+        </div>
+        <div id="status-text" class="status-text">Checking...</div>
+        <div id="stats" class="stats" style="display: none;">
+          <div class="stat">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-favorites">0</div>
+            <div class="stat-label">Favorites</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-collections">0</div>
+            <div class="stat-label">Collections</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="api-url">Artifact Manager URL</label>
+        <input type="url" id="api-url" placeholder="https://artifact-manager.example.com">
+        <div class="help-text">The URL where your Artifact Manager is hosted</div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" id="test-btn">
+          Test Connection
+        </button>
+        <button class="btn btn-primary" id="save-btn">
+          Save Settings
+        </button>
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div class="divider"></div>
+
+      <button class="btn btn-secondary" id="open-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Open Artifact Manager
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Need help? <a href="https://github.com/Aventerica89/cf-url-shortener/tree/main/chrome-extension" target="_blank">View Documentation</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

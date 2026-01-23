@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate Extension Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #09090b;
+      color: #fafafa;
+    }
+    h1 { margin-bottom: 20px; }
+    .icon-preview {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .icon-item {
+      text-align: center;
+    }
+    .icon-item canvas {
+      border: 1px solid #333;
+      border-radius: 8px;
+    }
+    .icon-item p {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+    }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #4f46e5;
+    }
+    .instructions {
+      background: #18181b;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    code {
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Artifact Manager Icon Generator</h1>
+  <p>This tool generates the required PNG icons for the Chrome extension.</p>
+
+  <div class="icon-preview">
+    <div class="icon-item">
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <p>16x16</p>
+    </div>
+    <div class="icon-item">
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <p>48x48</p>
+    </div>
+    <div class="icon-item">
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <p>128x128</p>
+    </div>
+  </div>
+
+  <button onclick="downloadAll()">Download All Icons</button>
+
+  <div class="instructions">
+    <strong>Instructions:</strong>
+    <ol>
+      <li>Click "Download All Icons" to download the PNG files</li>
+      <li>Move the downloaded files to the <code>chrome-extension/icons/</code> folder</li>
+      <li>Rename them to: <code>icon16.png</code>, <code>icon48.png</code>, <code>icon128.png</code></li>
+    </ol>
+  </div>
+
+  <script>
+    const sizes = [16, 48, 128];
+
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const scale = size / 128;
+
+      // Clear
+      ctx.clearRect(0, 0, size, size);
+
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#6366f1');
+      gradient.addColorStop(1, '#8b5cf6');
+
+      // Rounded rectangle background
+      const radius = 20 * scale;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, radius);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Draw cube/box icon
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = Math.max(1, 2 * scale);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const boxSize = size * 0.35;
+
+      // 3D box paths
+      const points = {
+        top: { x: cx, y: cy - boxSize * 0.8 },
+        left: { x: cx - boxSize * 0.8, y: cy - boxSize * 0.1 },
+        right: { x: cx + boxSize * 0.8, y: cy - boxSize * 0.1 },
+        bottom: { x: cx, y: cy + boxSize * 0.6 },
+        center: { x: cx, y: cy + boxSize * 0.1 },
+        frontLeft: { x: cx - boxSize * 0.8, y: cy + boxSize * 0.6 },
+        frontRight: { x: cx + boxSize * 0.8, y: cy + boxSize * 0.6 }
+      };
+
+      // Draw box outline
+      ctx.beginPath();
+      // Top face
+      ctx.moveTo(points.top.x, points.top.y);
+      ctx.lineTo(points.left.x, points.left.y);
+      ctx.lineTo(points.center.x, points.center.y);
+      ctx.lineTo(points.right.x, points.right.y);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Front left face
+      ctx.beginPath();
+      ctx.moveTo(points.left.x, points.left.y);
+      ctx.lineTo(points.frontLeft.x, points.frontLeft.y);
+      ctx.lineTo(points.bottom.x, points.bottom.y);
+      ctx.lineTo(points.center.x, points.center.y);
+      ctx.stroke();
+
+      // Front right face
+      ctx.beginPath();
+      ctx.moveTo(points.right.x, points.right.y);
+      ctx.lineTo(points.frontRight.x, points.frontRight.y);
+      ctx.lineTo(points.bottom.x, points.bottom.y);
+      ctx.lineTo(points.center.x, points.center.y);
+      ctx.stroke();
+
+      // Center vertical line
+      ctx.beginPath();
+      ctx.moveTo(points.top.x, points.top.y);
+      ctx.lineTo(points.center.x, points.center.y);
+      ctx.lineTo(points.bottom.x, points.bottom.y);
+      ctx.stroke();
+    }
+
+    // Draw all icons
+    sizes.forEach(size => {
+      const canvas = document.getElementById(`icon${size}`);
+      drawIcon(canvas);
+    });
+
+    function downloadAll() {
+      sizes.forEach(size => {
+        const canvas = document.getElementById(`icon${size}`);
+        const link = document.createElement('a');
+        link.download = `icon${size}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>

@@ -2,10 +2,40 @@
 // Cloudflare Worker with D1 Database
 // Tracks published artifacts (claude.site URLs) and downloaded artifacts
 
+// CORS headers for Chrome extension support
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://claude.ai',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Cf-Access-Jwt-Assertion',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400'
+};
+
+// Helper to add CORS headers to a response
+function corsResponse(response) {
+  const newHeaders = new Headers(response.headers);
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    newHeaders.set(key, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname.slice(1);
+
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: CORS_HEADERS
+      });
+    }
 
     // Get authenticated user
     const userEmail = await getUserEmail(request);
@@ -13,8 +43,35 @@ export default {
     // API routes require authentication
     if (path.startsWith('api/')) {
       if (!userEmail) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        return corsResponse(Response.json({ error: 'Unauthorized' }, { status: 401 }));
       }
+
+      // Process API request and wrap response with CORS headers
+      const apiResponse = await handleApiRequest(path, request, env, userEmail, url);
+      if (apiResponse) {
+        return corsResponse(apiResponse);
+      }
+
+      return corsResponse(Response.json({ error: 'Not found' }, { status: 404 }));
+    }
+
+    // ============ MAIN APP UI ============
+
+    if (!path || path === 'admin' || path === '') {
+      if (!userEmail) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      return new Response(getAppHtml(userEmail), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+
+    return new Response('Not found', { status: 404 });
+  }
+};
+
+// Handle API requests (separated for CORS wrapping)
+async function handleApiRequest(path, request, env, userEmail, url) {
 
       // ============ ARTIFACTS API ============
 
@@ -468,23 +525,9 @@ export default {
         return Response.json({ success: true });
       }
 
-      return Response.json({ error: 'Not found' }, { status: 404 });
-    }
-
-    // ============ MAIN APP UI ============
-
-    if (!path || path === 'admin' || path === '') {
-      if (!userEmail) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-      return new Response(getAppHtml(userEmail), {
-        headers: { 'Content-Type': 'text/html' }
-      });
-    }
-
-    return new Response('Not found', { status: 404 });
-  }
-};
+      // No matching API route
+      return null;
+}
 
 // ============ AUTHENTICATION ============
 

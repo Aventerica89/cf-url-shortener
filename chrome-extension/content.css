@@ -1,0 +1,105 @@
+/* Artifact Manager Content Script Styles */
+
+.artifact-manager-btn-container {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1000;
+  display: flex;
+  gap: 4px;
+}
+
+.artifact-manager-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.artifact-manager-save-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}
+
+.artifact-manager-save-btn:active {
+  transform: translateY(0);
+}
+
+.artifact-manager-save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.artifact-manager-save-btn svg {
+  flex-shrink: 0;
+}
+
+.artifact-manager-save-btn.artifact-manager-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.artifact-manager-save-btn.artifact-manager-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Spinner animation */
+.artifact-manager-spinner {
+  animation: artifact-manager-spin 1s linear infinite;
+}
+
+@keyframes artifact-manager-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Notification toast */
+.artifact-manager-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background: #18181b;
+  color: #fafafa;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  animation: artifact-manager-slide-in 0.3s ease;
+  max-width: 350px;
+}
+
+.artifact-manager-notification-success {
+  border-left: 4px solid #10b981;
+}
+
+.artifact-manager-notification-error {
+  border-left: 4px solid #ef4444;
+}
+
+.artifact-manager-notification-info {
+  border-left: 4px solid #6366f1;
+}
+
+@keyframes artifact-manager-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
