@@ -1,278 +1,116 @@
-# URL Shortener
+# Cloudflare URL Shortener
 
-A fast, multi-user URL shortener built with Cloudflare Workers and D1 database. Features categories, tags, AJAX search, and fully automatic deployment via GitHub Actions.
+A fast, free URL shortener that runs on Cloudflare's edge network. Multi-user support, categories, tags, search, and a clean dark UI.
 
-**Live:** https://links.jbcloud.app
-**Admin:** https://links.jbcloud.app/admin
+## Quick Start (with Claude Code)
 
-## Features
+The fastest way to deploy your own instance:
 
-- ⚡ Fast redirects via Cloudflare's edge network
-- 👥 Multi-user support (each user has private links)
-- 🔐 Authentication via Cloudflare Access (Google, GitHub, Email)
-- 📁 Categories for organizing links (Work, Personal, Social, Marketing, Docs)
-- 🏷️ Tags for flexible link organization
-- 🔍 AJAX search with Cmd+K shortcut
-- 📊 Stats dashboard with click tracking
-- 📤 Export/Import links as JSON (v2 format with categories/tags)
-- 🎨 Shadcn-style dark theme UI
-- 🚀 **Fully automatic deployment** - push to main, everything deploys
-- 💰 Free tier friendly (100k requests/day)
+1. **Fork this repo** to your GitHub account
 
-## Stack
+2. **Open Claude Code** and run:
+   ```
+   claude "Help me deploy cf-url-shortener to my Cloudflare account"
+   ```
 
-- **Cloudflare Workers** - Serverless compute at the edge
-- **Cloudflare D1** - SQLite database
-- **Cloudflare Access** - Authentication (free for 50 users)
-- **GitHub Actions** - CI/CD auto-deployment with D1 migrations
-- **No frameworks** - Pure JavaScript, single file
+3. **Follow Claude's prompts** - it will:
+   - Create your D1 database
+   - Set up your custom domain
+   - Configure GitHub secrets
+   - Deploy everything automatically
+
+That's it. Claude handles all the Cloudflare configuration.
 
 ---
 
-## Automatic Deployment
+## What You'll Need
 
-**Push to `main` and everything deploys automatically** - worker code AND database migrations.
+- **Cloudflare account** (free) - [Sign up](https://dash.cloudflare.com/sign-up)
+- **GitHub account** (free) - For the repo and Actions
+- **A domain on Cloudflare** - For your custom short link domain (e.g., `links.yourdomain.com`)
 
-### One-Time Setup (5 minutes)
+---
 
-#### 1. Create Cloudflare API Token
+## Features
 
-- Go to: [Cloudflare Dashboard](https://dash.cloudflare.com) → My Profile (top right) → API Tokens
-- Click "Create Token"
-- Use template: **"Edit Cloudflare Workers"**
-- Add permission: **Account | D1 | Edit** (required for migrations)
-- Account Resources: Include → Your Account Name
-- Zone Resources: Include → All zones (or specific zone)
-- Click "Continue to summary" → "Create Token"
-- **Copy the token immediately** (you won't see it again!)
-
-#### 2. Get your Account ID
-
-- Go to: Cloudflare Dashboard → Workers & Pages
-- Your Account ID is in the right sidebar
-
-#### 3. Add Secrets to GitHub
-
-- Go to: Your repo → Settings → Secrets and variables → Actions
-- Click "New repository secret"
-- Add two secrets:
-
-| Name | Value |
-|------|-------|
-| `CLOUDFLARE_API_TOKEN` | Your API token from step 1 |
-| `CLOUDFLARE_ACCOUNT_ID` | Your account ID from step 2 |
-
-#### 4. Done!
-
-Now every push to `main`:
-1. Runs database migrations automatically (`migrations.sql`)
-2. Deploys the worker code
-
-No manual steps. No dashboard editing. Just push and go.
-
-### Manual Trigger
-
-- Go to: Actions tab → "Deploy to Cloudflare Workers" → "Run workflow"
+| Feature | Description |
+|---------|-------------|
+| **Fast redirects** | Runs on Cloudflare's global edge network |
+| **Multi-user** | Each user has private links (via Cloudflare Access) |
+| **Categories** | Organize links by category with color coding |
+| **Tags** | Flexible tagging system |
+| **Search** | Instant search with Cmd+K shortcut |
+| **Click tracking** | See how many times each link was clicked |
+| **Import/Export** | Backup and restore your links as JSON |
+| **Dark theme** | Clean Shadcn-style UI |
+| **Auto-deploy** | Push to main = instant deployment |
+| **Free** | Runs entirely on Cloudflare's free tier |
 
 ---
 
 ## How It Works
 
-### Workflow File (`.github/workflows/deploy.yml`)
-
-```yaml
-name: Deploy to Cloudflare Workers
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    name: Deploy Worker
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run D1 Migrations
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute url-shortener --remote --file=migrations.sql
-        continue-on-error: true  # Migrations may already be applied
-
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+```
+User clicks: links.example.com/gh
+         ↓
+Cloudflare Worker (edge, <50ms)
+         ↓
+D1 Database lookup
+         ↓
+302 Redirect → github.com/user/repo
 ```
 
-### Database Migrations
-
-The `migrations.sql` file runs on every deploy. It uses `CREATE TABLE IF NOT EXISTS` so it's safe to run repeatedly:
-
-```sql
--- Creates tables only if they don't exist
-CREATE TABLE IF NOT EXISTS categories (...);
-CREATE TABLE IF NOT EXISTS tags (...);
-CREATE TABLE IF NOT EXISTS link_tags (...);
-CREATE INDEX IF NOT EXISTS idx_... ON ...;
-```
-
-**To add new schema changes:**
-1. Add SQL to `migrations.sql` using `IF NOT EXISTS` patterns
-2. Push to main
-3. Done - migrations run automatically
+**Stack:**
+- Cloudflare Workers (serverless compute)
+- Cloudflare D1 (SQLite database)
+- Cloudflare Access (authentication)
+- GitHub Actions (CI/CD)
 
 ---
 
-## Project Structure
+## After Deployment
 
-```
-url-shortener/
-├── .github/workflows/
-│   └── deploy.yml           # Auto-deploy + migrations on push
-├── worker-multiuser.js      # Main worker with Shadcn UI
-├── worker.js                # Simple single-user version
-├── wrangler.toml            # Cloudflare config
-├── migrations.sql           # Auto-runs on deploy
-├── schema-multiuser.sql     # Full schema reference
-├── schema.sql               # Single-user schema
-├── design-system.html       # UI playground/reference
-└── README.md
-```
+### Admin Dashboard
+Visit `https://your-domain.com/admin` to:
+- Create, edit, delete links
+- Organize with categories and tags
+- Search your links
+- View click statistics
+- Export/import data
 
----
+### Creating Links
+Your links work like: `https://links.example.com/shortcode` → redirects to destination
 
-## API Endpoints
-
-### Links
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/links` | List links (with category/tag filters) |
-| POST | `/api/links` | Create link |
-| PUT | `/api/links/:code` | Update link |
-| DELETE | `/api/links/:code` | Delete link |
-| GET | `/api/search?q=` | Search links |
-
-### Categories
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/categories` | List categories with counts |
-| POST | `/api/categories` | Create category |
-| DELETE | `/api/categories/:slug` | Delete category |
-
-### Other
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/tags` | List tags with usage counts |
-| GET | `/api/stats` | Dashboard stats |
-| GET | `/api/export` | Export all data (v2 JSON) |
-| POST | `/api/import` | Import data |
-| GET | `/:code` | Redirect (public) |
-| GET | `/admin` | Admin dashboard |
-
-### Examples
-
-```bash
-# Create a link with category and tags
-curl -X POST https://links.jbcloud.app/api/links \
-  -H "Content-Type: application/json" \
-  -d '{"code": "portfolio", "destination": "https://example.com", "category_id": 1, "tags": ["work", "main"]}'
-
-# Search links
-curl "https://links.jbcloud.app/api/search?q=portfolio"
-
-# Filter by category
-curl "https://links.jbcloud.app/api/links?category=work&sort=clicks"
-```
-
----
-
-## Database Schema
-
-### Links
-```sql
-CREATE TABLE links (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  code TEXT UNIQUE NOT NULL,
-  destination TEXT NOT NULL,
-  clicks INTEGER DEFAULT 0,
-  user_email TEXT NOT NULL,
-  category_id INTEGER,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Categories
-```sql
-CREATE TABLE categories (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL,
-  color TEXT DEFAULT 'gray',  -- violet, pink, cyan, orange, green, gray
-  user_email TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(slug, user_email)
-);
-```
-
-### Tags
-```sql
-CREATE TABLE tags (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  user_email TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(name, user_email)
-);
-
-CREATE TABLE link_tags (
-  link_id INTEGER NOT NULL,
-  tag_id INTEGER NOT NULL,
-  PRIMARY KEY (link_id, tag_id)
-);
-```
-
----
-
-## Multi-User Setup (Cloudflare Access)
-
-The admin requires authentication via Cloudflare Access (free for 50 users).
-
-### Setup
-
-1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com)
-2. Access → Applications → Add application → Self-hosted
-3. Configure:
-   - Name: `Link Shortener Admin`
-   - Domain: `links.yourdomain.com`
-   - Path: `/admin*` and `/api/*`
-4. Add policy: Allow emails ending in `@yourdomain.com` (or specific emails)
-5. Enable login methods: Google, GitHub, or Email OTP
-
-Public redirects (`/shortcode`) work without login.
+### API
+Full REST API available at `/api/*` - see [MANUAL.md](MANUAL.md) for endpoints.
 
 ---
 
 ## Costs
 
-**Cloudflare Free Tier:**
-- Workers: 100,000 requests/day
-- D1: 5GB storage, 5M rows read/day
-- Access: 50 users
-- No egress fees, no surprise bills
+Everything runs on **Cloudflare's free tier**:
+
+| Resource | Free Limit |
+|----------|------------|
+| Workers | 100,000 requests/day |
+| D1 Database | 5GB storage |
+| Access | 50 users |
+
+No credit card required. No surprise bills.
+
+---
+
+## Manual Setup
+
+Prefer to set things up yourself? See **[MANUAL.md](MANUAL.md)** for:
+- Step-by-step Cloudflare configuration
+- GitHub Actions setup
+- API documentation
+- Database schema
+- Troubleshooting
 
 ---
 
 ## License
 
-MIT - Do whatever you want with it.
+MIT - Use it however you want.
