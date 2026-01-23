@@ -59,3 +59,35 @@ The UI uses Shadcn-style CSS variables. To test UI changes:
 - Merging to `main` = automatic deploy
 - Schema changes go in `migrations.sql`
 - Never ask user to run wrangler commands or edit Cloudflare dashboard
+
+---
+
+## CURRENT ISSUE (January 2026)
+
+### Problem: GitHub Actions deployment failing
+
+**Error:** `Could not route to /client/v4/accounts/.../d1/database/... [code: 7003]`
+
+**Root cause:** GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` were found to be empty.
+
+### What was done:
+1. Fixed `wrangler.toml` syntax: changed `[routes]` to `[[routes]]` (TOML array syntax)
+2. Pinned wrangler version to 3.90.0 in deploy.yml
+3. User re-entered the secrets
+
+### What still needs to happen:
+1. **Verify GitHub secrets are correctly saved:**
+   - Go to: https://github.com/Aventerica89/cf-url-shortener/settings/secrets/actions
+   - `CLOUDFLARE_ACCOUNT_ID` - 32-char hex string from Cloudflare dashboard (Workers & Pages → right sidebar)
+   - `CLOUDFLARE_API_TOKEN` - API token with permissions: Account → Workers Scripts → Edit, Account → D1 → Edit
+
+2. **Re-run the workflow** after secrets are confirmed
+
+3. **If still failing**, check:
+   - Is the D1 database `url-shortener` (ID: `b47f73ea-a441-4f8f-986b-5080a7d2a1c9`) in the correct account?
+   - Does the API token have the right account selected when created?
+
+### New Shadcn UI ready to deploy:
+- `worker-multiuser.js` has the new dark theme with sidebar, categories, tags, AJAX search
+- `migrations.sql` has the schema for categories, tags, link_tags tables
+- Everything is merged to main, just needs successful deployment
