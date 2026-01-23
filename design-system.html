@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Shortener - Shadcn-style Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       SHADCN-STYLE CSS VARIABLES (Dark Theme)
+       Based on shadcn/ui default dark theme
+       ============================================ */
+    :root {
+      --background: 0 0% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 0 0% 3.9%;
+      --card-foreground: 0 0% 98%;
+      --popover: 0 0% 3.9%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 0 0% 9%;
+      --secondary: 0 0% 14.9%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 0 0% 14.9%;
+      --muted-foreground: 0 0% 63.9%;
+      --accent: 0 0% 14.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 0 0% 14.9%;
+      --input: 0 0% 14.9%;
+      --ring: 0 0% 83.1%;
+      --radius: 0.5rem;
+
+      /* Custom accent colors */
+      --indigo: 239 84% 67%;
+      --indigo-foreground: 0 0% 100%;
+
+      /* Category colors */
+      --cat-work: 271 91% 65%;
+      --cat-personal: 330 81% 60%;
+      --cat-social: 189 94% 43%;
+      --cat-marketing: 25 95% 53%;
+      --cat-docs: 160 84% 39%;
+    }
+
+    /* ============================================
+       RESET & BASE
+       ============================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============================================
+       LAYOUT
+       ============================================ */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 256px;
+      background: hsl(var(--card));
+      border-right: 1px solid hsl(var(--border));
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 40;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 18px;
+      height: 18px;
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+    }
+
+    .nav-group {
+      margin-bottom: 24px;
+    }
+
+    .nav-group-label {
+      padding: 0 12px;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: calc(var(--radius) - 2px);
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .nav-item:hover {
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+    }
+
+    .nav-item.active {
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    .nav-item-icon {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .nav-item-badge {
+      margin-left: auto;
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Category dot */
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-dot.work { background: hsl(var(--cat-work)); }
+    .cat-dot.personal { background: hsl(var(--cat-personal)); }
+    .cat-dot.social { background: hsl(var(--cat-social)); }
+    .cat-dot.marketing { background: hsl(var(--cat-marketing)); }
+    .cat-dot.docs { background: hsl(var(--cat-docs)); }
+
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .user-button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: calc(var(--radius) - 2px);
+      background: transparent;
+      border: none;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      transition: background 150ms;
+    }
+
+    .user-button:hover {
+      background: hsl(var(--accent));
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .avatar.sm {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;
+    }
+
+    .user-info {
+      flex: 1;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      margin-left: 256px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      height: 56px;
+      background: hsl(var(--background));
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    /* Search - Shadcn Command style */
+    .search {
+      flex: 1;
+      max-width: 512px;
+      position: relative;
+    }
+
+    .search-trigger {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      background: hsl(var(--secondary));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      color: hsl(var(--muted-foreground));
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .search-trigger:hover {
+      background: hsl(var(--accent));
+    }
+
+    .search-trigger:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.3);
+    }
+
+    .search-trigger svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .search-trigger span {
+      flex: 1;
+      text-align: left;
+    }
+
+    .search-kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-family: inherit;
+      background: hsl(var(--muted));
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Search Dialog/Dropdown */
+    .search-dialog {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: hsl(var(--popover));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      overflow: hidden;
+      display: none;
+      z-index: 50;
+    }
+
+    .search-dialog.open {
+      display: block;
+      animation: fadeIn 150ms ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-input-wrapper {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .search-input-wrapper svg {
+      width: 16px;
+      height: 16px;
+      color: hsl(var(--muted-foreground));
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: hsl(var(--foreground));
+      font-size: 14px;
+    }
+
+    .search-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .search-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid hsl(var(--muted));
+      border-top-color: hsl(var(--foreground));
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+
+    .search-spinner.loading {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .search-results {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .search-group {
+      padding: 8px 8px 4px;
+    }
+
+    .search-group-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      padding: 0 8px 4px;
+    }
+
+    .search-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: calc(var(--radius) - 2px);
+      cursor: pointer;
+      transition: background 150ms;
+    }
+
+    .search-item:hover {
+      background: hsl(var(--accent));
+    }
+
+    .search-item-code {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 13px;
+      color: hsl(var(--indigo));
+      background: hsl(var(--indigo) / 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .search-item-url {
+      flex: 1;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .search-empty {
+      padding: 24px;
+      text-align: center;
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Header Actions */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Page */
+    .page {
+      flex: 1;
+      padding: 24px;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .page-description {
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    /* ============================================
+       SHADCN COMPONENTS
+       ============================================ */
+
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: all 150ms;
+      white-space: nowrap;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-default {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .btn-default:hover {
+      background: hsl(var(--primary) / 0.9);
+    }
+
+    .btn-secondary {
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .btn-secondary:hover {
+      background: hsl(var(--accent));
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: hsl(var(--foreground));
+      border: 1px solid hsl(var(--border));
+    }
+
+    .btn-outline:hover {
+      background: hsl(var(--accent));
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: hsl(var(--foreground));
+    }
+
+    .btn-ghost:hover {
+      background: hsl(var(--accent));
+    }
+
+    .btn-destructive {
+      background: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+    }
+
+    .btn-destructive:hover {
+      background: hsl(var(--destructive) / 0.9);
+    }
+
+    .btn-sm {
+      height: 32px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
+
+    .btn-lg {
+      height: 44px;
+      padding: 0 24px;
+      font-size: 16px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+    }
+
+    .btn-icon.sm {
+      width: 32px;
+      height: 32px;
+    }
+
+    /* Card */
+    .card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+    }
+
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      padding: 24px 24px 0;
+    }
+
+    .card-header.row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .card-description {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 4px;
+    }
+
+    .card-content {
+      padding: 24px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      padding: 0 24px 24px;
+    }
+
+    /* Input */
+    .input {
+      display: flex;
+      height: 40px;
+      width: 100%;
+      padding: 0 12px;
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--input));
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      transition: all 150ms;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.3);
+    }
+
+    .input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Label */
+    .label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    /* Select */
+    .select {
+      display: flex;
+      height: 40px;
+      width: 100%;
+      padding: 0 12px;
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--input));
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+      transition: all 150ms;
+    }
+
+    .select:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.3);
+    }
+
+    .select.sm {
+      height: 32px;
+      font-size: 13px;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+    }
+
+    .badge-default {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .badge-secondary {
+      background: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+      border-color: hsl(var(--border));
+    }
+
+    .badge-outline {
+      background: transparent;
+      color: hsl(var(--foreground));
+      border-color: hsl(var(--border));
+    }
+
+    .badge-success {
+      background: hsl(142 76% 36% / 0.15);
+      color: hsl(142 76% 46%);
+    }
+
+    /* Category Badges */
+    .badge-cat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: var(--radius);
+    }
+
+    .badge-cat.work {
+      background: hsl(var(--cat-work) / 0.15);
+      color: hsl(var(--cat-work));
+    }
+
+    .badge-cat.personal {
+      background: hsl(var(--cat-personal) / 0.15);
+      color: hsl(var(--cat-personal));
+    }
+
+    .badge-cat.social {
+      background: hsl(var(--cat-social) / 0.15);
+      color: hsl(var(--cat-social));
+    }
+
+    .badge-cat.marketing {
+      background: hsl(var(--cat-marketing) / 0.15);
+      color: hsl(var(--cat-marketing));
+    }
+
+    .badge-cat.docs {
+      background: hsl(var(--cat-docs) / 0.15);
+      color: hsl(var(--cat-docs));
+    }
+
+    /* Tag Input */
+    .tag-input {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 40px;
+      padding: 6px 8px;
+      background: hsl(var(--background));
+      border: 1px solid hsl(var(--input));
+      border-radius: var(--radius);
+      transition: all 150ms;
+    }
+
+    .tag-input:focus-within {
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.3);
+    }
+
+    .tag-input input {
+      flex: 1;
+      min-width: 80px;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: hsl(var(--foreground));
+    }
+
+    .tag-input input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: hsl(var(--secondary));
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+
+    .tag-close {
+      display: flex;
+      width: 14px;
+      height: 14px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px;
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .tag-close:hover {
+      background: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table th {
+      height: 48px;
+      padding: 0 16px;
+      text-align: left;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      background: hsl(var(--muted) / 0.5);
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .table td {
+      height: 56px;
+      padding: 0 16px;
+      border-bottom: 1px solid hsl(var(--border));
+      vertical-align: middle;
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tr:hover td {
+      background: hsl(var(--muted) / 0.3);
+    }
+
+    /* Table cells */
+    .cell-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cell-link a {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: hsl(var(--indigo));
+      background: hsl(var(--indigo) / 0.1);
+      padding: 4px 10px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: all 150ms;
+    }
+
+    .cell-link a:hover {
+      background: hsl(var(--indigo));
+      color: white;
+    }
+
+    .cell-url {
+      max-width: 280px;
+      color: hsl(var(--muted-foreground));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cell-url:hover {
+      color: hsl(var(--foreground));
+    }
+
+    .cell-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .cell-clicks {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: hsl(142 76% 46%);
+    }
+
+    .cell-clicks svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .cell-date {
+      color: hsl(var(--muted-foreground));
+      font-size: 13px;
+    }
+
+    .cell-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 150ms;
+    }
+
+    .table tr:hover .cell-actions {
+      opacity: 1;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      padding: 24px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+
+    .stat-change {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .stat-change.up {
+      color: hsl(142 76% 46%);
+    }
+
+    .stat-change.down {
+      color: hsl(0 84% 60%);
+    }
+
+    /* Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pagination-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      color: hsl(var(--foreground));
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: hsl(var(--accent));
+    }
+
+    .pagination-btn.active {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border-color: hsl(var(--primary));
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      min-width: 320px;
+      animation: slideIn 200ms ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .toast-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toast-icon.success { color: hsl(142 76% 46%); }
+    .toast-icon.error { color: hsl(0 84% 60%); }
+
+    .toast-content {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-weight: 500;
+    }
+
+    .toast-description {
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .toast-close {
+      color: hsl(var(--muted-foreground));
+      cursor: pointer;
+    }
+
+    .toast-close:hover {
+      color: hsl(var(--foreground));
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .main {
+        margin-left: 0;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </div>
+          <span class="logo-text">LinkShort</span>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="nav-group">
+          <div class="nav-item active">
+            <span class="nav-item-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+            </span>
+            <span>All Links</span>
+            <span class="nav-item-badge">128</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" x2="18" y1="20" y2="10"/>
+                <line x1="12" x2="12" y1="20" y2="4"/>
+                <line x1="6" x2="6" y1="20" y2="14"/>
+              </svg>
+            </span>
+            <span>Analytics</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </span>
+            <span>Settings</span>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Categories</div>
+          <div class="nav-item">
+            <span class="cat-dot work"></span>
+            <span>Work</span>
+            <span class="nav-item-badge">42</span>
+          </div>
+          <div class="nav-item">
+            <span class="cat-dot personal"></span>
+            <span>Personal</span>
+            <span class="nav-item-badge">28</span>
+          </div>
+          <div class="nav-item">
+            <span class="cat-dot social"></span>
+            <span>Social Media</span>
+            <span class="nav-item-badge">35</span>
+          </div>
+          <div class="nav-item">
+            <span class="cat-dot marketing"></span>
+            <span>Marketing</span>
+            <span class="nav-item-badge">18</span>
+          </div>
+          <div class="nav-item">
+            <span class="cat-dot docs"></span>
+            <span>Documentation</span>
+            <span class="nav-item-badge">5</span>
+          </div>
+          <div class="nav-item" style="color: hsl(var(--muted-foreground));">
+            <span class="nav-item-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+                <path d="M5 12h14"/>
+                <path d="M12 5v14"/>
+              </svg>
+            </span>
+            <span>Add Category</span>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Popular Tags</div>
+          <div style="padding: 0 12px; display: flex; flex-wrap: wrap; gap: 6px;">
+            <span class="badge badge-secondary">portfolio</span>
+            <span class="badge badge-secondary">landing</span>
+            <span class="badge badge-secondary">docs</span>
+            <span class="badge badge-secondary">api</span>
+            <span class="badge badge-secondary">campaign</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="user-button">
+          <div class="avatar">JD</div>
+          <div class="user-info">
+            <div class="user-name">John Doe</div>
+            <div class="user-email">john@example.com</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--muted-foreground));">
+            <path d="m7 15 5 5 5-5"/>
+            <path d="m7 9 5-5 5 5"/>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Header -->
+      <header class="header">
+        <div class="search">
+          <button class="search-trigger" id="searchTrigger">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <span>Search links...</span>
+            <kbd class="search-kbd">
+              <span style="font-size: 14px;">&#8984;</span>K
+            </kbd>
+          </button>
+
+          <div class="search-dialog" id="searchDialog">
+            <div class="search-input-wrapper">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+              <input type="text" class="search-input" placeholder="Type to search..." id="searchInput">
+              <div class="search-spinner" id="searchSpinner"></div>
+            </div>
+            <div class="search-results">
+              <div class="search-group">
+                <div class="search-group-label">Recent</div>
+                <div class="search-item">
+                  <span class="search-item-code">/portfolio</span>
+                  <span class="search-item-url">https://example.com/my-portfolio</span>
+                </div>
+                <div class="search-item">
+                  <span class="search-item-code">/docs</span>
+                  <span class="search-item-url">https://docs.example.com/api/v2</span>
+                </div>
+                <div class="search-item">
+                  <span class="search-item-code">/twitter</span>
+                  <span class="search-item-url">https://twitter.com/username</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" x2="12" y1="3" y2="15"/>
+            </svg>
+            Export
+          </button>
+          <button class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+            Import
+          </button>
+          <button class="btn btn-default btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+              <path d="M12 5v14"/>
+            </svg>
+            New Link
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page">
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-label">Total Links</div>
+            <div class="stat-value">128</div>
+            <div class="stat-change up">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m5 12 7-7 7 7"/>
+                <path d="M12 19V5"/>
+              </svg>
+              +12% this week
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Total Clicks</div>
+            <div class="stat-value">4,832</div>
+            <div class="stat-change up">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m5 12 7-7 7 7"/>
+                <path d="M12 19V5"/>
+              </svg>
+              +8% this week
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Categories</div>
+            <div class="stat-value">5</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-label">Unique Tags</div>
+            <div class="stat-value">24</div>
+          </div>
+        </div>
+
+        <!-- Create Form -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <h2 class="card-title">Create New Link</h2>
+            <p class="card-description">Add a new shortened link with optional category and tags.</p>
+          </div>
+          <div class="card-content">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="label">Short Code</label>
+                <input type="text" class="input" placeholder="my-link">
+              </div>
+              <div class="form-group">
+                <label class="label">Destination URL</label>
+                <input type="url" class="input" placeholder="https://example.com/your-long-url">
+              </div>
+              <div class="form-group">
+                <label class="label">Category</label>
+                <select class="select">
+                  <option value="">Select category...</option>
+                  <option value="work">Work</option>
+                  <option value="personal">Personal</option>
+                  <option value="social">Social Media</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="docs">Documentation</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="label">Tags</label>
+                <div class="tag-input">
+                  <span class="tag">
+                    portfolio
+                    <span class="tag-close">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18"/>
+                        <path d="m6 6 12 12"/>
+                      </svg>
+                    </span>
+                  </span>
+                  <input type="text" placeholder="Add tag...">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="label">&nbsp;</label>
+                <button class="btn btn-default" style="height: 40px;">Create Link</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Links Table -->
+        <div class="card">
+          <div class="card-header row">
+            <div>
+              <h2 class="card-title">Your Links</h2>
+              <p class="card-description">Manage all your shortened URLs.</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <select class="select sm" style="width: 150px;">
+                <option>All Categories</option>
+                <option>Work</option>
+                <option>Personal</option>
+                <option>Social Media</option>
+              </select>
+              <select class="select sm" style="width: 150px;">
+                <option>Sort: Newest</option>
+                <option>Sort: Oldest</option>
+                <option>Sort: Most Clicks</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Short Link</th>
+                  <th>Destination</th>
+                  <th>Category</th>
+                  <th>Tags</th>
+                  <th>Clicks</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="cell-link">
+                      <a href="#">/portfolio</a>
+                      <button class="btn btn-ghost btn-icon sm" style="opacity: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="#" class="cell-url">https://example.com/my-portfolio-website-2024</a>
+                  </td>
+                  <td>
+                    <span class="badge-cat work">
+                      <span class="cat-dot work"></span>
+                      Work
+                    </span>
+                  </td>
+                  <td>
+                    <div class="cell-tags">
+                      <span class="badge badge-outline">portfolio</span>
+                      <span class="badge badge-outline">main</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="cell-clicks">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                        <polyline points="16 7 22 7 22 13"/>
+                      </svg>
+                      1,234
+                    </span>
+                  </td>
+                  <td class="cell-date">Jan 15, 2026</td>
+                  <td>
+                    <div class="cell-actions">
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                          <path d="m15 5 4 4"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18"/>
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="cell-link">
+                      <a href="#">/twitter</a>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="#" class="cell-url">https://twitter.com/username</a>
+                  </td>
+                  <td>
+                    <span class="badge-cat social">
+                      <span class="cat-dot social"></span>
+                      Social
+                    </span>
+                  </td>
+                  <td>
+                    <div class="cell-tags">
+                      <span class="badge badge-outline">social</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="cell-clicks">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                        <polyline points="16 7 22 7 22 13"/>
+                      </svg>
+                      856
+                    </span>
+                  </td>
+                  <td class="cell-date">Jan 12, 2026</td>
+                  <td>
+                    <div class="cell-actions">
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                          <path d="m15 5 4 4"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18"/>
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="cell-link">
+                      <a href="#">/launch-promo</a>
+                    </div>
+                  </td>
+                  <td>
+                    <a href="#" class="cell-url">https://producthunt.com/posts/my-awesome-app</a>
+                  </td>
+                  <td>
+                    <span class="badge-cat marketing">
+                      <span class="cat-dot marketing"></span>
+                      Marketing
+                    </span>
+                  </td>
+                  <td>
+                    <div class="cell-tags">
+                      <span class="badge badge-outline">launch</span>
+                      <span class="badge badge-outline">ph</span>
+                      <span class="badge badge-outline">campaign</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="cell-clicks">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                        <polyline points="16 7 22 7 22 13"/>
+                      </svg>
+                      2,341
+                    </span>
+                  </td>
+                  <td class="cell-date">Jan 10, 2026</td>
+                  <td>
+                    <div class="cell-actions">
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                          <path d="m15 5 4 4"/>
+                        </svg>
+                      </button>
+                      <button class="btn btn-ghost btn-icon sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18"/>
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <div class="pagination-info">Showing 1-10 of 128 links</div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m15 18-6-6 6-6"/>
+                </svg>
+              </button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn">2</button>
+              <button class="pagination-btn">3</button>
+              <button class="pagination-btn">...</button>
+              <button class="pagination-btn">13</button>
+              <button class="pagination-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m9 18 6-6-6-6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container">
+    <div class="toast">
+      <div class="toast-icon success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="toast-content">
+        <div class="toast-title">Link created</div>
+        <div class="toast-description">Your new short link is ready to use.</div>
+      </div>
+      <div class="toast-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Search Dialog
+    const searchTrigger = document.getElementById('searchTrigger');
+    const searchDialog = document.getElementById('searchDialog');
+    const searchInput = document.getElementById('searchInput');
+    const searchSpinner = document.getElementById('searchSpinner');
+
+    searchTrigger.addEventListener('click', () => {
+      searchDialog.classList.add('open');
+      searchInput.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search')) {
+        searchDialog.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      // Cmd+K or Ctrl+K to open search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchDialog.classList.add('open');
+        searchInput.focus();
+      }
+      // Escape to close
+      if (e.key === 'Escape') {
+        searchDialog.classList.remove('open');
+      }
+    });
+
+    // AJAX Search with debounce
+    let searchTimeout = null;
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      if (query.length < 2) {
+        searchSpinner.classList.remove('loading');
+        return;
+      }
+
+      searchSpinner.classList.add('loading');
+
+      // Debounce 300ms
+      searchTimeout = setTimeout(async () => {
+        try {
+          // In production:
+          // const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+          // const results = await response.json();
+
+          // Simulate API delay
+          await new Promise(r => setTimeout(r, 300));
+
+          // Update results...
+        } finally {
+          searchSpinner.classList.remove('loading');
+        }
+      }, 300);
+    });
+  </script>
+</body>
+</html>
