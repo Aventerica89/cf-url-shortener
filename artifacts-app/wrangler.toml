@@ -1,0 +1,19 @@
+# Artifact Management App - Cloudflare Worker Configuration
+# Tracks Claude.ai artifacts (published URLs and downloaded files)
+
+name = "artifact-manager"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+# You'll need to create this database first:
+# wrangler d1 create artifact-manager
+[[d1_databases]]
+binding = "DB"
+database_name = "artifact-manager"
+database_id = "YOUR_DATABASE_ID_HERE"  # Replace after running: wrangler d1 create artifact-manager
+
+# Custom domain (optional - configure after deployment)
+# [[routes]]
+# pattern = "artifacts.yourdomain.com/*"
+# zone_name = "yourdomain.com"

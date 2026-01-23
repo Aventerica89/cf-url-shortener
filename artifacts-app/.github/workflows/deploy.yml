@@ -1,0 +1,44 @@
+# Artifact Manager - Automatic Deployment
+# Deploys to Cloudflare Workers on push to main
+
+name: Deploy Artifact Manager
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'artifacts-app/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler@3.90.0
+
+      - name: Run D1 Migrations
+        working-directory: artifacts-app
+        run: wrangler d1 execute artifact-manager --remote --file=migrations.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        continue-on-error: true
+
+      - name: Deploy Worker
+        working-directory: artifacts-app
+        run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
