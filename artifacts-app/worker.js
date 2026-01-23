@@ -660,6 +660,54 @@ function getAppHtml(userEmail) {
       color: var(--muted-foreground);
     }
 
+    .logout-button {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 0.75rem;
+    }
+
+    .logout-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--indigo), var(--violet));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .logout-user-info {
+      flex: 1;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .logout-username {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .logout-email {
+      font-size: 11px;
+      color: var(--muted-foreground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .logout-icon {
+      opacity: 0.5;
+    }
+
+    .hidden-input {
+      display: none;
+    }
+
     /* Main Content */
     .main {
       margin-left: 280px;
@@ -1374,15 +1422,13 @@ function getAppHtml(userEmail) {
     </nav>
 
     <div class="sidebar-footer">
-      <button class="btn btn-ghost" style="width: 100%; justify-content: flex-start; gap: 0.75rem;" id="logoutBtn">
-        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--indigo), var(--violet)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">
-          ${safeEmail.charAt(0).toUpperCase()}
+      <button class="btn btn-ghost logout-button" id="logoutBtn">
+        <div class="logout-avatar">${safeEmail.charAt(0).toUpperCase()}</div>
+        <div class="logout-user-info">
+          <div class="logout-username">${safeEmail.split('@')[0]}</div>
+          <div class="logout-email">${safeEmail}</div>
         </div>
-        <div style="flex: 1; text-align: left; min-width: 0;">
-          <div style="font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeEmail.split('@')[0]}</div>
-          <div style="font-size: 11px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeEmail}</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.5;">
+        <svg class="logout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
           <line x1="21" x2="9" y1="12" y2="12"/>
@@ -1418,7 +1464,7 @@ function getAppHtml(userEmail) {
           </svg>
           Import
         </button>
-        <input type="file" id="import-input" accept=".json" style="display: none;">
+        <input type="file" id="import-input" accept=".json" class="hidden-input">
         <button class="btn btn-primary" id="addArtifactBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -1938,8 +1984,8 @@ function getAppHtml(userEmail) {
     function escapeAttr(text) {
       if (!text) return '';
       return String(text)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
+        .replace(/\\\\/g, '\\\\\\\\')
+        .replace(/'/g, "\\\\'")
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
