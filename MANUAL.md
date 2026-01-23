@@ -125,39 +125,93 @@ Every push to `main` triggers deployment automatically via GitHub Actions:
 
 ## Step 4: Authentication (Optional)
 
-For multi-user support, set up Cloudflare Access:
+For multi-user support, set up Cloudflare Access (free for 50 users). This enables login via Google, GitHub, or email.
 
-### 4.1 Create Access Application
+### 4.1 Set Up Identity Providers
 
-1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com)
-2. Navigate to **Access** → **Applications**
-3. Click **Add an application** → **Self-hosted**
+Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com) → **Settings** → **Authentication** → **Login methods**
 
-### 4.2 Configure Application
+#### Google OAuth
+
+1. Click **Add new** → **Google**
+2. Create OAuth credentials in Google Cloud Console:
+   - Go to https://console.cloud.google.com/apis/credentials
+   - Click **Create Credentials** → **OAuth client ID**
+   - Application type: **Web application**
+   - Name: `Cloudflare Access`
+   - Authorized redirect URI: `https://<your-team-name>.cloudflareaccess.com/cdn-cgi/access/callback`
+   - Click **Create**
+3. Copy the **Client ID** and **Client Secret**
+4. Paste them into Cloudflare and click **Save**
+
+#### GitHub OAuth
+
+1. Click **Add new** → **GitHub**
+2. Create OAuth App at https://github.com/settings/developers:
+   - Click **New OAuth App**
+   - Application name: `Cloudflare Access`
+   - Homepage URL: `https://links.yourdomain.com`
+   - Authorization callback URL: `https://<your-team-name>.cloudflareaccess.com/cdn-cgi/access/callback`
+   - Click **Register application**
+3. Copy the **Client ID**, then click **Generate a new client secret**
+4. Paste both into Cloudflare and click **Save**
+
+#### Email One-Time Passcode (No setup required)
+
+1. Click **Add new** → **One-time PIN**
+2. Click **Save** - that's it!
+
+Users will receive a 6-digit code via email to log in.
+
+### 4.2 Create Access Application
+
+1. Go to **Access** → **Applications** → **Add an application**
+2. Select **Self-hosted**
+3. Configure the application:
 
 | Field | Value |
 |-------|-------|
 | Application name | URL Shortener Admin |
-| Session Duration | 24 hours (or your preference) |
+| Session Duration | 24 hours |
 | Application domain | `links.yourdomain.com` |
 | Path | `/admin*` |
 
-Add another path: `/api/*`
+4. Click **Add another path** and add: `/api/*`
+5. Click **Next**
 
-### 4.3 Create Policy
+### 4.3 Create Access Policy
 
 1. Policy name: `Allow Users`
 2. Action: **Allow**
-3. Add a rule:
-   - **Emails ending in** → `@yourdomain.com`
-   - Or **Emails** → specific email addresses
+3. Configure rules (choose one or combine):
 
-### 4.4 Enable Identity Providers
+**Option A: Allow specific email domain**
+- Selector: **Emails ending in**
+- Value: `@yourdomain.com`
 
-1. Go to **Settings** → **Authentication**
-2. Enable providers: Google, GitHub, Email OTP, etc.
+**Option B: Allow specific emails**
+- Selector: **Emails**
+- Value: `user1@gmail.com`, `user2@gmail.com`
 
-Public redirects (`/shortcode`) will work without authentication.
+**Option C: Allow anyone (public signup)**
+- Selector: **Everyone**
+- ⚠️ Only use this for testing!
+
+4. Click **Save**
+
+### 4.4 Test Authentication
+
+1. Open an incognito window
+2. Visit `https://links.yourdomain.com/admin`
+3. You should see a login page with your enabled providers (Google, GitHub, Email)
+4. Log in - you'll be redirected to the admin dashboard
+
+### Important Notes
+
+- **Public redirects still work** - visitors can use short links (`/shortcode`) without logging in
+- **Each user's data is private** - users only see their own links
+- **Session duration** - users stay logged in for the configured time (default 24 hours)
+- **Your team name** is found at: Zero Trust Dashboard → Settings → Custom Pages → Team domain
 
 ---
 
