@@ -1737,7 +1737,7 @@ function getAppHtml(userEmail) {
           </div>
         </div>
         <div id="content-viewer-preview" style="display: none; height: 400px; border-bottom: 1px solid var(--border);">
-          <iframe id="content-preview-iframe" style="width: 100%; height: 100%; border: none; background: white;"></iframe>
+          <iframe id="content-preview-iframe" sandbox="allow-scripts" style="width: 100%; height: 100%; border: none; background: white;"></iframe>
         </div>
         <pre id="content-viewer-code" style="margin: 0; padding: 1rem; overflow: auto; max-height: 500px; background: var(--background); font-size: 0.8125rem; line-height: 1.5;"><code id="content-viewer-text"></code></pre>
       </div>
@@ -1848,7 +1848,7 @@ function getAppHtml(userEmail) {
       const nav = document.getElementById('collections-nav');
       nav.innerHTML = allCollections.map(c => \`
         <div class="nav-item" data-filter="collection" data-value="\${escapeAttr(c.slug)}" onclick="setFilter('collection', '\${escapeAttr(c.slug)}')">
-          <div class="collection-dot" style="background: \${escapeAttr(c.color)}"></div>
+          <div class="collection-dot" style="background: \${safeColor(c.color)}"></div>
           \${escapeHtml(c.name)}
           <span class="nav-item-count">\${c.artifact_count || 0}</span>
         </div>
@@ -1996,7 +1996,7 @@ function getAppHtml(userEmail) {
             <div>
               \${a.collection_name ? \`
                 <span class="collection-badge">
-                  <span class="collection-dot" style="background: \${escapeAttr(a.collection_color)}; width: 6px; height: 6px;"></span>
+                  <span class="collection-dot" style="background: \${safeColor(a.collection_color)}; width: 6px; height: 6px;"></span>
                   \${escapeHtml(a.collection_name)}
                 </span>
               \` : '<span style="color: var(--muted-foreground)">No collection</span>'}
@@ -2117,6 +2117,14 @@ function getAppHtml(userEmail) {
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+    }
+
+    // Validate and sanitize color values (prevents CSS injection)
+    function safeColor(color) {
+      if (!color) return '#6366f1';
+      // Only allow valid hex colors
+      const hexPattern = /^#([0-9a-fA-F]{3}){1,2}$/;
+      return hexPattern.test(color) ? color : '#6366f1';
     }
 
     // Tags Input
@@ -2268,12 +2276,20 @@ function getAppHtml(userEmail) {
     let showingPreview = false;
 
     async function viewContent(id) {
-      const artifact = await fetch(\`/api/artifacts/\${id}\`).then(r => r.json());
-      currentViewingArtifact = artifact;
-      showingPreview = false;
+      try {
+        const response = await fetch(\`/api/artifacts/\${id}\`);
+        if (!response.ok) {
+          throw new Error(\`Failed to load artifact (HTTP \${response.status})\`);
+        }
+        const artifact = await response.json();
+        if (artifact.error) {
+          throw new Error(artifact.error);
+        }
+        currentViewingArtifact = artifact;
+        showingPreview = false;
 
-      // Set title
-      document.getElementById('content-modal-title').textContent = artifact.name || 'View Artifact';
+        // Set title
+        document.getElementById('content-modal-title').textContent = artifact.name || 'View Artifact';
 
       // Set info
       document.getElementById('content-viewer-type').textContent = \`Type: \${artifact.artifact_type || 'unknown'}\`;
@@ -2316,6 +2332,10 @@ function getAppHtml(userEmail) {
       codeContainer.style.display = 'block';
 
       document.getElementById('content-modal').classList.add('active');
+      } catch (error) {
+        console.error('Error loading artifact:', error);
+        showToast(error.message || 'Failed to load artifact content', 'error');
+      }
     }
 
     function closeContentModal() {
