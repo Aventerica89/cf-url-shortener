@@ -2,6 +2,9 @@
 // Cloudflare Worker with D1 Database
 // Tracks published artifacts (claude.site URLs) and downloaded artifacts
 
+// Favicon SVG with accessibility title and optimized grouped paths
+const ARTIFACT_MANAGER_FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctitle%3EArtifact Manager Icon%3C/title%3E%3Crect width='32' height='32' rx='6' fill='%2309090b'/%3E%3Cg fill='none' stroke='%23a855f7' stroke-width='2'%3E%3Cpath d='M16 6l8 5v10l-8 5-8-5V11l8-5z'/%3E%3Cpath d='M16 6v10m0 10V16m8-5l-8 5m-8 0l8-5'/%3E%3C/g%3E%3C/svg%3E";
+
 // CORS headers for Chrome extension support
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': 'https://claude.ai',
@@ -565,6 +568,7 @@ function getAppHtml(userEmail) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Artifact Manager - Claude Artifacts</title>
+  <link rel="icon" type="image/svg+xml" href="${ARTIFACT_MANAGER_FAVICON}">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
