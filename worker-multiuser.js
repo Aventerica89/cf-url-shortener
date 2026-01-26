@@ -944,7 +944,7 @@ async function verifyPassword(password, storedHash) {
 
 // Generate HTML for password prompt
 function getPasswordHTML(code, error = false) {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1015,17 +1015,17 @@ function getPasswordHTML(code, error = false) {
     <p>This link is protected. Please enter the password to continue.</p>
     <form method="POST">
       <input type="password" name="password" placeholder="Enter password" required autofocus>
-      \${error ? '<div class="error">Incorrect password. Please try again.</div>' : ''}
+      ${error ? '<div class="error">Incorrect password. Please try again.</div>' : ''}
       <button type="submit">Unlock Link</button>
     </form>
   </div>
 </body>
-</html>\`;
+</html>`;
 }
 
 // Generate HTML for 404 page
 function get404HTML(code) {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1099,7 +1099,7 @@ function get404HTML(code) {
     <div class="code-404">404</div>
     <h1>Link Not Found</h1>
     <p>The short link you're looking for doesn't exist or may have been removed.</p>
-    <div class="code-display">/\${code}</div>
+    <div class="code-display">/${code}</div>
     <div>
       <a href="/" class="home-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1111,12 +1111,12 @@ function get404HTML(code) {
     </div>
   </div>
 </body>
-</html>\`;
+</html>`;
 }
 
 // Generate HTML for expired links
 function getExpiredHTML() {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1164,7 +1164,7 @@ function getExpiredHTML() {
     <p>This short link is no longer active. It may have reached its expiration date.</p>
   </div>
 </body>
-</html>\`;
+</html>`;
 }
 
 function getAdminHTML(userEmail) {
