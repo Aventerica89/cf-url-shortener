@@ -1326,11 +1326,39 @@ function getAppHtml(userEmail) {
       color: var(--foreground);
     }
 
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      padding: 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--foreground);
+      cursor: pointer;
+    }
+
+    /* Sidebar overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: flex;
+      }
+
       .sidebar {
         transform: translateX(-100%);
         z-index: 50;
+        transition: transform 0.2s ease;
       }
 
       .sidebar.open {
@@ -1341,19 +1369,92 @@ function getAppHtml(userEmail) {
         margin-left: 0;
       }
 
+      .header {
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+
+      .search-box {
+        flex: 1;
+        max-width: none;
+      }
+
+      .search-box input {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+
+      .header-actions {
+        gap: 0.25rem;
+      }
+
+      .header-actions .btn {
+        padding: 0.5rem;
+      }
+
+      .header-actions .btn svg {
+        margin: 0;
+      }
+
+      .header-actions .btn span {
+        display: none;
+      }
+
+      .content {
+        padding: 1rem;
+      }
+
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
       }
 
       .artifacts-grid {
         grid-template-columns: 1fr;
       }
+
+      .artifacts-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .artifacts-header select {
+        width: 100%;
+      }
+
+      .modal {
+        width: 95%;
+        max-height: 85vh;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logout-button {
+        padding: 0.5rem;
+      }
+
+      .logout-email {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="logo">
         <div class="logo-icon">
@@ -1440,12 +1541,19 @@ function getAppHtml(userEmail) {
   <!-- Main Content -->
   <main class="main">
     <header class="header">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <div class="search-box">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" placeholder="Search artifacts... (Cmd+K)" id="search-input">
+        <input type="text" placeholder="Search..." id="search-input">
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary" id="exportBtn">
@@ -1454,7 +1562,7 @@ function getAppHtml(userEmail) {
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          Export
+          <span>Export</span>
         </button>
         <button class="btn btn-secondary" id="importBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1462,7 +1570,7 @@ function getAppHtml(userEmail) {
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Import
+          <span>Import</span>
         </button>
         <input type="file" id="import-input" accept=".json" class="hidden-input">
         <button class="btn btn-primary" id="addArtifactBtn">
@@ -1470,7 +1578,7 @@ function getAppHtml(userEmail) {
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Artifact
+          <span>Add</span>
         </button>
       </div>
     </header>
@@ -1713,6 +1821,15 @@ function getAppHtml(userEmail) {
       });
       document.getElementById('import-input').addEventListener('change', importData);
       document.getElementById('addArtifactBtn').addEventListener('click', openCreateModal);
+
+      // Mobile menu toggle
+      document.getElementById('mobileMenuBtn').addEventListener('click', toggleSidebar);
+      document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('active');
     }
 
     async function loadStats() {
