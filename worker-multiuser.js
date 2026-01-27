@@ -1712,9 +1712,27 @@ function getAdminHTML(userEmail) {
       .form-grid { grid-template-columns: 1fr; }
       .content { padding: 1rem; }
       .content-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+      /* Links table mobile optimizations */
       .links-table { font-size: 0.8125rem; }
-      .links-table th:nth-child(3), .links-table td:nth-child(3) { display: none; }
-      .links-table th:nth-child(4), .links-table td:nth-child(4) { display: none; }
+      .links-table th, .links-table td { padding: 0 8px; height: 48px; }
+      .links-table th:nth-child(3), .links-table td:nth-child(3) { display: none; } /* Destination */
+      .links-table th:nth-child(4), .links-table td:nth-child(4) { display: none; } /* Category */
+      .links-table th:nth-child(5), .links-table td:nth-child(5) { display: none; } /* Tags */
+      .links-table th:nth-child(7), .links-table td:nth-child(7) { display: none; } /* Created */
+      .cell-checkbox { width: 32px; }
+      .cell-link a { padding: 3px 6px; font-size: 12px; }
+      .cell-link .copy-btn { display: none; }
+      .cell-actions { opacity: 1; gap: 2px; }
+      .cell-actions .icon-btn { width: 32px; height: 32px; min-width: 32px; }
+      .pagination { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+      .pagination-info { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      /* Extra small screens - show only essential columns */
+      .links-table th:nth-child(6), .links-table td:nth-child(6) { display: none; } /* Clicks */
+      .cell-actions .icon-btn:not(:first-child):not(:last-child) { display: none; } /* Hide middle actions, keep QR and delete */
+      .content { padding: 0.75rem; }
+      .content-header h1 { font-size: 1.25rem; }
     }
 
     /* Analytics Styles */
@@ -2141,7 +2159,7 @@ function getAdminHTML(userEmail) {
             </div>
           </div>
           <div class="table-wrapper">
-            <table class="table">
+            <table class="table links-table">
               <thead>
                 <tr>
                   <th class="cell-checkbox"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
