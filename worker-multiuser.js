@@ -3851,7 +3851,7 @@ function getDesignSystemHTML() {
 
 // Mobile App Mockup Page
 function getMobileMockupHTML() {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -3949,5 +3949,5 @@ function getMobileMockupHTML() {
     </div>
   </div>
 </body>
-</html>\`;
+</html>`;
 }
