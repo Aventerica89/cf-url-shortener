@@ -14,7 +14,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourname.linkshort",
+      "bundleIdentifier": "com.aventerica89.linkshort",
       "buildNumber": "1"
     },
     "android": {
@@ -26,7 +26,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "115adcb9-dddd-4590-b7af-3f45cf1cfd02"
       }
     },
     "plugins": []
