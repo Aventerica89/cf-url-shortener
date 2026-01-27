@@ -120,9 +120,9 @@ async function handleApiRequest(path, request, env, userEmail, url) {
           query += ' AND a.is_favorite = 1';
         }
         if (search) {
-          query += ' AND (a.name LIKE ? OR a.description LIKE ? OR a.notes LIKE ?)';
+          query += ' AND (a.name LIKE ? OR a.description LIKE ? OR a.notes LIKE ? OR a.language LIKE ? OR a.file_name LIKE ?)';
           const searchTerm = `%${search}%`;
-          params.push(searchTerm, searchTerm, searchTerm);
+          params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
         }
         if (tag) {
           query += ' AND a.id IN (SELECT artifact_id FROM artifact_tags at2 JOIN tags t2 ON at2.tag_id = t2.id WHERE t2.name = ? AND t2.user_email = ?)';
@@ -804,6 +804,33 @@ function getAppHtml(userEmail) {
       top: 50%;
       transform: translateY(-50%);
       color: var(--muted-foreground);
+    }
+
+    .search-box .clear-search {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 0.25rem;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      display: none;
+      border-radius: 50%;
+    }
+
+    .search-box .clear-search:hover {
+      color: var(--foreground);
+      background: var(--border);
+    }
+
+    .search-box .clear-search.visible {
+      display: flex;
+    }
+
+    .search-box input {
+      padding-right: 2rem;
     }
 
     .header-actions {
@@ -1508,6 +1535,12 @@ function getAppHtml(userEmail) {
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" placeholder="Search artifacts... (Cmd+K)" id="search-input">
+        <button class="clear-search" id="clear-search" onclick="clearSearch()" title="Clear search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary" id="exportBtn">
@@ -1572,13 +1605,24 @@ function getAppHtml(userEmail) {
       <!-- Artifacts -->
       <div class="artifacts-header">
         <h2 id="artifacts-title">All Artifacts</h2>
-        <select id="sort-select" onchange="loadArtifacts()">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="name">Name (A-Z)</option>
-          <option value="updated">Recently Updated</option>
-          <option value="type">By Type</option>
-        </select>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <select id="type-filter" onchange="loadArtifacts()">
+            <option value="">All Types</option>
+            <option value="code">Code</option>
+            <option value="html">HTML/Web App</option>
+            <option value="document">Document</option>
+            <option value="image">Image</option>
+            <option value="data">Data/Analysis</option>
+            <option value="other">Other</option>
+          </select>
+          <select id="sort-select" onchange="loadArtifacts()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="updated">Recently Updated</option>
+            <option value="type">By Type</option>
+          </select>
+        </div>
       </div>
 
       <div class="artifacts-grid" id="artifacts-grid"></div>
@@ -1801,12 +1845,25 @@ function getAppHtml(userEmail) {
 
       // Search debounce
       let searchTimeout;
-      document.getElementById('search-input').addEventListener('input', (e) => {
+      const searchInput = document.getElementById('search-input');
+      const clearBtn = document.getElementById('clear-search');
+
+      searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
+        // Toggle clear button visibility
+        clearBtn.classList.toggle('visible', e.target.value.length > 0);
         searchTimeout = setTimeout(() => {
           loadArtifacts();
         }, 300);
       });
+
+      // Clear search function
+      window.clearSearch = function() {
+        searchInput.value = '';
+        clearBtn.classList.remove('visible');
+        loadArtifacts();
+        searchInput.focus();
+      };
 
       // Source type toggle
       document.getElementById('artifact-source').addEventListener('change', (e) => {
@@ -1902,10 +1959,12 @@ function getAppHtml(userEmail) {
     async function loadArtifacts() {
       const sort = document.getElementById('sort-select').value;
       const search = document.getElementById('search-input').value;
+      const typeFilter = document.getElementById('type-filter').value;
 
       let url = \`/api/artifacts?sort=\${sort}\`;
 
       if (search) url += \`&search=\${encodeURIComponent(search)}\`;
+      if (typeFilter) url += \`&type=\${encodeURIComponent(typeFilter)}\`;
 
       if (currentFilter.type === 'collection') {
         url += \`&collection=\${currentFilter.value}\`;
@@ -1931,15 +1990,44 @@ function getAppHtml(userEmail) {
       const pageArtifacts = allArtifacts.slice(start, start + perPage);
 
       if (allArtifacts.length === 0) {
-        grid.innerHTML = \`
-          <div class="empty-state" style="grid-column: 1 / -1;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            </svg>
-            <h3>No artifacts yet</h3>
-            <p>Add your first artifact to get started</p>
-          </div>
-        \`;
+        const searchValue = document.getElementById('search-input').value;
+        const typeFilter = document.getElementById('type-filter').value;
+        const hasFilters = searchValue || typeFilter || currentFilter.type !== 'all';
+
+        if (hasFilters) {
+          // Show "no results" message when filtering/searching
+          let message = 'No artifacts found';
+          if (searchValue) {
+            message = \`No artifacts found for "\${escapeHtml(searchValue)}"\`;
+          } else if (typeFilter) {
+            message = \`No \${typeFilter} artifacts found\`;
+          } else if (currentFilter.type !== 'all') {
+            message = \`No artifacts in this \${currentFilter.type}\`;
+          }
+
+          grid.innerHTML = \`
+            <div class="empty-state" style="grid-column: 1 / -1;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <h3>\${message}</h3>
+              <p>Try adjusting your search or filters</p>
+              <button class="btn btn-secondary" onclick="resetFilters()" style="margin-top: 1rem;">Clear Filters</button>
+            </div>
+          \`;
+        } else {
+          // Show "no artifacts yet" message when empty
+          grid.innerHTML = \`
+            <div class="empty-state" style="grid-column: 1 / -1;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+              <h3>No artifacts yet</h3>
+              <p>Add your first artifact to get started</p>
+            </div>
+          \`;
+        }
         document.getElementById('pagination').innerHTML = '';
         return;
       }
@@ -2097,6 +2185,18 @@ function getAppHtml(userEmail) {
           </button>
         </div>
       \`;
+    }
+
+    function resetFilters() {
+      // Clear search
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search').classList.remove('visible');
+
+      // Reset type filter
+      document.getElementById('type-filter').value = '';
+
+      // Reset sidebar filter to "all"
+      setFilter('all');
     }
 
     function getTypeIcon(type) {
