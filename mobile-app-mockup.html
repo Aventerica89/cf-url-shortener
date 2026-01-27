@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkShort - Mobile App Mockup (iPhone)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       PAGE STYLES (Outside device)
+       ============================================ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 32px;
+    }
+
+    .page-header {
+      text-align: center;
+      color: white;
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+    }
+
+    .devices-container {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .device-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .device-label {
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       iPHONE DEVICE FRAME
+       ============================================ */
+    .iphone {
+      width: 375px;
+      height: 812px;
+      background: #1c1c1e;
+      border-radius: 55px;
+      padding: 18px;
+      box-shadow:
+        0 0 0 3px #2c2c2e,
+        0 0 0 6px #1c1c1e,
+        0 50px 100px -20px rgba(0,0,0,0.5),
+        inset 0 0 2px rgba(255,255,255,0.1);
+      position: relative;
+    }
+
+    .iphone::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 35px;
+      background: #1c1c1e;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    .iphone-screen {
+      width: 100%;
+      height: 100%;
+      background: hsl(0 0% 3.9%);
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============================================
+       APP CSS VARIABLES (Shadcn Dark)
+       ============================================ */
+    .iphone-screen {
+      --background: 0 0% 3.9%;
+      --foreground: 0 0% 98%;
+      --card: 0 0% 7%;
+      --card-foreground: 0 0% 98%;
+      --muted: 0 0% 14.9%;
+      --muted-foreground: 0 0% 63.9%;
+      --border: 0 0% 14.9%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 0 0% 9%;
+      --destructive: 0 62.8% 30.6%;
+      --indigo: 239 84% 67%;
+      --radius: 12px;
+
+      /* Category colors */
+      --cat-work: 271 91% 65%;
+      --cat-personal: 330 81% 60%;
+      --cat-social: 189 94% 43%;
+      --cat-marketing: 25 95% 53%;
+
+      font-size: 15px;
+      color: hsl(var(--foreground));
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================
+       STATUS BAR
+       ============================================ */
+    .status-bar {
+      height: 54px;
+      padding: 14px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .status-bar-left {
+      width: 80px;
+    }
+
+    .status-bar-right {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .status-bar-right svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ============================================
+       APP HEADER
+       ============================================ */
+    .app-header {
+      padding: 0 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: hsl(var(--muted));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--foreground));
+    }
+
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ============================================
+       SEARCH BAR
+       ============================================ */
+    .search-bar {
+      margin: 0 20px 16px;
+      height: 44px;
+      background: hsl(var(--muted));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .search-bar svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .search-bar span {
+      font-size: 16px;
+    }
+
+    /* ============================================
+       QUICK STATS
+       ============================================ */
+    .quick-stats {
+      display: flex;
+      gap: 12px;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+
+    .quick-stat {
+      flex: 1;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .quick-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .quick-stat-label {
+      font-size: 12px;
+      color: hsl(var(--muted-foreground));
+      margin-top: 2px;
+    }
+
+    .quick-stat-change {
+      font-size: 11px;
+      color: hsl(142 76% 46%);
+      margin-top: 4px;
+    }
+
+    /* ============================================
+       SECTION HEADER
+       ============================================ */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .section-action {
+      font-size: 14px;
+      color: hsl(var(--indigo));
+      font-weight: 500;
+    }
+
+    /* ============================================
+       LINK CARDS (Mobile Native Style)
+       ============================================ */
+    .links-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px;
+    }
+
+    .link-card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .link-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .link-code {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: hsl(var(--indigo));
+      background: hsl(var(--indigo) / 0.15);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .link-menu {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .link-url {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .link-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .link-meta {
+      display: flex;
+      gap: 16px;
+    }
+
+    .link-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .link-meta-item svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .link-meta-item.clicks {
+      color: hsl(142 76% 46%);
+    }
+
+    .link-category {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .link-category.work {
+      background: hsl(var(--cat-work) / 0.15);
+      color: hsl(var(--cat-work));
+    }
+
+    .link-category.social {
+      background: hsl(var(--cat-social) / 0.15);
+      color: hsl(var(--cat-social));
+    }
+
+    .link-category.marketing {
+      background: hsl(var(--cat-marketing) / 0.15);
+      color: hsl(var(--cat-marketing));
+    }
+
+    .cat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .cat-dot.work { background: hsl(var(--cat-work)); }
+    .cat-dot.social { background: hsl(var(--cat-social)); }
+    .cat-dot.marketing { background: hsl(var(--cat-marketing)); }
+
+    /* ============================================
+       BOTTOM TAB BAR
+       ============================================ */
+    .tab-bar {
+      height: 83px;
+      background: hsl(var(--card) / 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid hsl(var(--border));
+      display: flex;
+      padding: 8px 0 25px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: hsl(var(--muted-foreground));
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .tab-item.active {
+      color: hsl(var(--indigo));
+    }
+
+    .tab-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .tab-item-add {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -20px;
+      box-shadow: 0 4px 20px hsl(var(--indigo) / 0.4);
+    }
+
+    .tab-item-add svg {
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+
+    /* ============================================
+       HOME INDICATOR
+       ============================================ */
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: hsl(var(--foreground));
+      border-radius: 3px;
+      opacity: 0.3;
+    }
+
+    /* ============================================
+       CREATE LINK SCREEN
+       ============================================ */
+    .screen-create .app-header {
+      justify-content: center;
+      position: relative;
+    }
+
+    .screen-create .app-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: hsl(var(--indigo));
+      font-size: 16px;
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .form-section {
+      padding: 0 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 50px;
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0 16px;
+      font-size: 16px;
+      color: hsl(var(--foreground));
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .form-select {
+      width: 100%;
+      height: 50px;
+      background: hsl(var(--muted));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-select-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-btn {
+      width: 100%;
+      height: 54px;
+      background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin-top: 24px;
+    }
+
+    /* ============================================
+       ANALYTICS SCREEN
+       ============================================ */
+    .analytics-card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 20px;
+      margin: 0 20px 16px;
+    }
+
+    .analytics-card-title {
+      font-size: 14px;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 8px;
+    }
+
+    .analytics-card-value {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .chart-placeholder {
+      height: 120px;
+      background: linear-gradient(180deg, hsl(var(--indigo) / 0.2) 0%, transparent 100%);
+      border-radius: 8px;
+      margin-top: 16px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 8px 8px;
+      gap: 6px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: linear-gradient(180deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      border-radius: 4px 4px 0 0;
+      min-height: 20px;
+    }
+
+    .top-links {
+      padding: 0 20px;
+    }
+
+    .top-link-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .top-link-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-link-rank {
+      width: 24px;
+      height: 24px;
+      background: hsl(var(--muted));
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .top-link-code {
+      font-weight: 500;
+    }
+
+    .top-link-clicks {
+      color: hsl(142 76% 46%);
+      font-weight: 600;
+    }
+
+    /* ============================================
+       SCREEN CONTENT WRAPPER
+       ============================================ */
+    .screen-content {
+      height: calc(100% - 83px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .scrollable {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 20px;
+    }
+
+    /* ============================================
+       SWIPE ACTION HINT
+       ============================================ */
+    .swipe-hint {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: hsl(var(--destructive));
+      color: white;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+    }
+
+    .swipe-hint svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Screen navigation buttons */
+    .screen-nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .screen-nav-btn {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .screen-nav-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .screen-nav-btn.active {
+      background: hsl(239 84% 67%);
+      border-color: hsl(239 84% 67%);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>LinkShort Mobile App</h1>
+    <p>Native iOS companion app mockup - Tap buttons below to switch screens</p>
+  </div>
+
+  <div class="devices-container">
+    <!-- iPhone 14 Pro - Links List Screen -->
+    <div class="device-wrapper">
+      <div class="iphone" id="device1">
+        <div class="iphone-screen">
+          <!-- Screen 1: Links List -->
+          <div class="screen screen-links" id="screen-links">
+            <div class="screen-content">
+              <!-- Status Bar -->
+              <div class="status-bar">
+                <div class="status-bar-left">9:41</div>
+                <div class="status-bar-right">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l2.48 2.48c.18.18.43.29.71.29.27 0 .52-.11.7-.28.79-.74 1.69-1.36 2.66-1.85.33-.16.56-.5.56-.9v-3.1c1.45-.48 3-.73 4.6-.73s3.15.25 4.6.73v3.1c0 .4.23.74.56.9.98.49 1.87 1.12 2.67 1.85.18.18.43.28.7.28.28 0 .53-.11.71-.29l2.48-2.48c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4" stroke-width="2"/></svg>
+                </div>
+              </div>
+
+              <!-- App Header -->
+              <div class="app-header">
+                <div class="app-title">Links</div>
+                <div class="header-actions">
+                  <div class="header-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Search Bar -->
+              <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Search links...</span>
+              </div>
+
+              <!-- Quick Stats -->
+              <div class="quick-stats">
+                <div class="quick-stat">
+                  <div class="quick-stat-value">128</div>
+                  <div class="quick-stat-label">Total Links</div>
+                  <div class="quick-stat-change">+12 this week</div>
+                </div>
+                <div class="quick-stat">
+                  <div class="quick-stat-value">4.8K</div>
+                  <div class="quick-stat-label">Total Clicks</div>
+                  <div class="quick-stat-change">+523 today</div>
+                </div>
+              </div>
+
+              <!-- Links List -->
+              <div class="section-header">
+                <div class="section-title">Recent Links</div>
+                <div class="section-action">See All</div>
+              </div>
+
+              <div class="scrollable">
+                <div class="links-list">
+                  <div class="link-card">
+                    <div class="link-card-header">
+                      <div class="link-code">/portfolio</div>
+                      <div class="link-menu">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </div>
+                    </div>
+                    <div class="link-url">https://example.com/my-portfolio-2024</div>
+                    <div class="link-card-footer">
+                      <div class="link-meta">
+                        <div class="link-meta-item clicks">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+                          1,234
+                        </div>
+                        <div class="link-meta-item">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                          2d ago
+                        </div>
+                      </div>
+                      <div class="link-category work">
+                        <span class="cat-dot work"></span>
+                        Work
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="link-card">
+                    <div class="link-card-header">
+                      <div class="link-code">/twitter</div>
+                      <div class="link-menu">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </div>
+                    </div>
+                    <div class="link-url">https://twitter.com/username</div>
+                    <div class="link-card-footer">
+                      <div class="link-meta">
+                        <div class="link-meta-item clicks">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+                          856
+                        </div>
+                        <div class="link-meta-item">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                          5d ago
+                        </div>
+                      </div>
+                      <div class="link-category social">
+                        <span class="cat-dot social"></span>
+                        Social
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="link-card">
+                    <div class="link-card-header">
+                      <div class="link-code">/promo</div>
+                      <div class="link-menu">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                      </div>
+                    </div>
+                    <div class="link-url">https://producthunt.com/posts/app</div>
+                    <div class="link-card-footer">
+                      <div class="link-meta">
+                        <div class="link-meta-item clicks">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+                          2,341
+                        </div>
+                        <div class="link-meta-item">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                          1w ago
+                        </div>
+                      </div>
+                      <div class="link-category marketing">
+                        <span class="cat-dot marketing"></span>
+                        Marketing
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+              <div class="tab-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Links
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                Analytics
+              </div>
+              <div class="tab-item">
+                <div class="tab-item-add">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </div>
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                Categories
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Settings
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+
+          <!-- Screen 2: Create Link -->
+          <div class="screen screen-create" id="screen-create" style="display: none;">
+            <div class="screen-content">
+              <div class="status-bar">
+                <div class="status-bar-left">9:41</div>
+                <div class="status-bar-right">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l2.48 2.48c.18.18.43.29.71.29.27 0 .52-.11.7-.28.79-.74 1.69-1.36 2.66-1.85.33-.16.56-.5.56-.9v-3.1c1.45-.48 3-.73 4.6-.73s3.15.25 4.6.73v3.1c0 .4.23.74.56.9.98.49 1.87 1.12 2.67 1.85.18.18.43.28.7.28.28 0 .53-.11.71-.29l2.48-2.48c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4" stroke-width="2"/></svg>
+                </div>
+              </div>
+
+              <div class="app-header">
+                <div class="back-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                  Back
+                </div>
+                <div class="app-title">New Link</div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-group">
+                  <label class="form-label">Short Code</label>
+                  <div class="form-input" style="display: flex; align-items: center; color: hsl(var(--muted-foreground));">my-link</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Destination URL</label>
+                  <div class="form-input" style="display: flex; align-items: center; color: hsl(var(--muted-foreground));">https://example.com/page</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <div class="form-select">
+                    <div class="form-select-value">
+                      <span class="cat-dot work"></span>
+                      Work
+                    </div>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Tags</label>
+                  <div class="form-input" style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: hsl(var(--muted)); padding: 4px 10px; border-radius: 6px; font-size: 13px;">portfolio</span>
+                    <span style="color: hsl(var(--muted-foreground)); font-size: 14px;">Add tag...</span>
+                  </div>
+                </div>
+
+                <div class="form-btn">Create Link</div>
+              </div>
+            </div>
+
+            <div class="tab-bar">
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Links
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                Analytics
+              </div>
+              <div class="tab-item">
+                <div class="tab-item-add">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </div>
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                Categories
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Settings
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+
+          <!-- Screen 3: Analytics -->
+          <div class="screen screen-analytics" id="screen-analytics" style="display: none;">
+            <div class="screen-content">
+              <div class="status-bar">
+                <div class="status-bar-left">9:41</div>
+                <div class="status-bar-right">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.46 3 3.34 4.78.29 7.67c-.18.18-.29.43-.29.71 0 .28.11.53.29.71l2.48 2.48c.18.18.43.29.71.29.27 0 .52-.11.7-.28.79-.74 1.69-1.36 2.66-1.85.33-.16.56-.5.56-.9v-3.1c1.45-.48 3-.73 4.6-.73s3.15.25 4.6.73v3.1c0 .4.23.74.56.9.98.49 1.87 1.12 2.67 1.85.18.18.43.28.7.28.28 0 .53-.11.71-.29l2.48-2.48c.18-.18.29-.43.29-.71 0-.28-.11-.53-.29-.71C20.66 4.78 16.54 3 12 3z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h20V2L2 22z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4" stroke-width="2"/></svg>
+                </div>
+              </div>
+
+              <div class="app-header">
+                <div class="app-title">Analytics</div>
+                <div class="header-actions">
+                  <div class="header-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="scrollable">
+                <div class="analytics-card">
+                  <div class="analytics-card-title">Total Clicks (7 days)</div>
+                  <div class="analytics-card-value">4,832</div>
+                  <div class="chart-placeholder">
+                    <div class="chart-bar" style="height: 40%;"></div>
+                    <div class="chart-bar" style="height: 65%;"></div>
+                    <div class="chart-bar" style="height: 45%;"></div>
+                    <div class="chart-bar" style="height: 80%;"></div>
+                    <div class="chart-bar" style="height: 55%;"></div>
+                    <div class="chart-bar" style="height: 90%;"></div>
+                    <div class="chart-bar" style="height: 100%;"></div>
+                  </div>
+                </div>
+
+                <div class="section-header">
+                  <div class="section-title">Top Performing</div>
+                  <div class="section-action">This Week</div>
+                </div>
+
+                <div class="top-links">
+                  <div class="top-link-item">
+                    <div class="top-link-info">
+                      <div class="top-link-rank">1</div>
+                      <div class="top-link-code">/promo</div>
+                    </div>
+                    <div class="top-link-clicks">2,341</div>
+                  </div>
+                  <div class="top-link-item">
+                    <div class="top-link-info">
+                      <div class="top-link-rank">2</div>
+                      <div class="top-link-code">/portfolio</div>
+                    </div>
+                    <div class="top-link-clicks">1,234</div>
+                  </div>
+                  <div class="top-link-item">
+                    <div class="top-link-info">
+                      <div class="top-link-rank">3</div>
+                      <div class="top-link-code">/twitter</div>
+                    </div>
+                    <div class="top-link-clicks">856</div>
+                  </div>
+                  <div class="top-link-item">
+                    <div class="top-link-info">
+                      <div class="top-link-rank">4</div>
+                      <div class="top-link-code">/docs</div>
+                    </div>
+                    <div class="top-link-clicks">423</div>
+                  </div>
+                  <div class="top-link-item" style="border-bottom: none;">
+                    <div class="top-link-info">
+                      <div class="top-link-rank">5</div>
+                      <div class="top-link-code">/github</div>
+                    </div>
+                    <div class="top-link-clicks">312</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-bar">
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Links
+              </div>
+              <div class="tab-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                Analytics
+              </div>
+              <div class="tab-item">
+                <div class="tab-item-add">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </div>
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                Categories
+              </div>
+              <div class="tab-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Settings
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="device-label">iPhone 14 Pro - 375x812</div>
+
+      <div class="screen-nav">
+        <button class="screen-nav-btn active" onclick="showScreen('links')">Links</button>
+        <button class="screen-nav-btn" onclick="showScreen('create')">Create</button>
+        <button class="screen-nav-btn" onclick="showScreen('analytics')">Analytics</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(screen) {
+      // Hide all screens
+      document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+      // Show selected screen
+      document.getElementById('screen-' + screen).style.display = 'block';
+      // Update nav buttons
+      document.querySelectorAll('.screen-nav-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
