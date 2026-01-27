@@ -9,6 +9,18 @@ export default {
     // Get user email from Cloudflare Access JWT
     const userEmail = await getUserEmail(request);
 
+    // Serve design resource pages (no auth required)
+    if (path === 'design-system') {
+      return new Response(getDesignSystemHTML(), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+    if (path === 'mobile-mockup') {
+      return new Response(getMobileMockupHTML(), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+
     // Public redirect - no auth needed
     if (path && !path.startsWith('admin') && !path.startsWith('api/')) {
       const link = await env.DB.prepare('SELECT id, destination, expires_at, password_hash FROM links WHERE code = ?').bind(path).first();
@@ -1652,6 +1664,38 @@ function getAdminHTML(userEmail) {
     .toast-close { color: hsl(var(--muted-foreground)); cursor: pointer; background: none; border: none; }
     .toast-close:hover { color: hsl(var(--foreground)); }
 
+    /* Dev Tools Floating Button */
+    .dev-tools-fab { position: fixed; bottom: 24px; left: 24px; z-index: 90; }
+    .dev-tools-btn {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);
+      border: none; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 12px hsl(var(--indigo) / 0.4);
+      transition: transform 150ms, box-shadow 150ms;
+    }
+    .dev-tools-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px hsl(var(--indigo) / 0.5); }
+    .dev-tools-btn svg { width: 22px; height: 22px; color: white; }
+    .dev-tools-menu {
+      position: absolute; bottom: 56px; left: 0;
+      background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+      border-radius: var(--radius); padding: 8px; min-width: 200px;
+      box-shadow: 0 10px 25px rgb(0 0 0 / 0.3);
+      opacity: 0; visibility: hidden; transform: translateY(8px);
+      transition: opacity 150ms, visibility 150ms, transform 150ms;
+    }
+    .dev-tools-fab.open .dev-tools-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dev-tools-menu-title { padding: 8px 12px; font-size: 11px; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.05em; }
+    .dev-tools-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: calc(var(--radius) - 4px);
+      color: hsl(var(--foreground)); text-decoration: none; font-size: 14px;
+      transition: background 150ms;
+    }
+    .dev-tools-menu-item:hover { background: hsl(var(--accent)); }
+    .dev-tools-menu-item svg { width: 16px; height: 16px; color: hsl(var(--muted-foreground)); }
+    @media (max-width: 768px) { .dev-tools-fab { bottom: 80px; } }
+
     /* Mobile Menu Button */
     .mobile-menu-btn {
       display: none;
@@ -2184,6 +2228,24 @@ function getAdminHTML(userEmail) {
     </main>
   </div>
 
+  <!-- Dev Tools FAB -->
+  <div class="dev-tools-fab" id="devToolsFab">
+    <button class="dev-tools-btn" onclick="toggleDevTools()" title="Design Tools">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
+    <div class="dev-tools-menu">
+      <div class="dev-tools-menu-title">Design Resources</div>
+      <a href="/design-system" target="_blank" class="dev-tools-menu-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Design System
+      </a>
+      <a href="/mobile-mockup" target="_blank" class="dev-tools-menu-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+        Mobile App Mockup
+      </a>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Edit Modal -->
@@ -2390,6 +2452,15 @@ function getAdminHTML(userEmail) {
     }
 
     // Mobile menu functions
+    // Dev Tools FAB
+    function toggleDevTools() {
+      document.getElementById('devToolsFab').classList.toggle('open');
+    }
+    document.addEventListener('click', (e) => {
+      const fab = document.getElementById('devToolsFab');
+      if (fab && !fab.contains(e.target)) fab.classList.remove('open');
+    });
+
     function toggleMobileMenu() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('mobileOverlay');
@@ -3679,6 +3750,204 @@ function getAdminHTML(userEmail) {
     // Init
     init();
   </script>
+</body>
+</html>`;
+}
+
+// Design System Reference Page
+function getDesignSystemHTML() {
+  return `<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkShort - Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --background: 0 0% 3.9%; --foreground: 0 0% 98%; --card: 0 0% 7%; --muted: 0 0% 14.9%; --muted-foreground: 0 0% 63.9%; --border: 0 0% 14.9%; --primary: 0 0% 98%; --primary-foreground: 0 0% 9%; --indigo: 239 84% 67%; --radius: 0.5rem; --cat-work: 271 91% 65%; --cat-personal: 330 81% 60%; --cat-social: 189 94% 43%; --cat-marketing: 25 95% 53%; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: hsl(var(--background)); color: hsl(var(--foreground)); min-height: 100vh; padding: 48px 24px; max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: hsl(var(--muted-foreground)); margin-bottom: 48px; }
+    h2 { font-size: 20px; font-weight: 600; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid hsl(var(--border)); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 20px; }
+    .color-swatch { width: 100%; height: 60px; border-radius: calc(var(--radius) - 4px); margin-bottom: 12px; }
+    .color-name { font-weight: 500; margin-bottom: 4px; }
+    .color-value { font-size: 12px; color: hsl(var(--muted-foreground)); font-family: monospace; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; font-size: 14px; font-weight: 500; border-radius: var(--radius); border: none; cursor: pointer; transition: all 150ms; }
+    .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+    .btn-secondary { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+    .btn-indigo { background: hsl(var(--indigo)); color: white; }
+    .btn-outline { background: transparent; border: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }
+    .btn-ghost { background: transparent; color: hsl(var(--foreground)); }
+    .btn:hover { opacity: 0.9; }
+    .input { height: 40px; width: 100%; padding: 0 12px; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); font-size: 14px; color: hsl(var(--foreground)); }
+    .input:focus { outline: none; border-color: hsl(var(--indigo)); }
+    .badge { display: inline-flex; padding: 4px 10px; font-size: 12px; font-weight: 500; border-radius: var(--radius); }
+    .badge-cat { display: inline-flex; align-items: center; gap: 6px; }
+    .cat-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .flex { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: hsl(var(--indigo)); text-decoration: none; margin-bottom: 24px; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <a href="/admin" class="back-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back to Admin</a>
+  <h1>Design System</h1>
+  <p class="subtitle">Shadcn-style components and colors for LinkShort</p>
+
+  <h2>Colors</h2>
+  <div class="grid">
+    <div class="card"><div class="color-swatch" style="background: hsl(var(--background)); border: 1px solid hsl(var(--border));"></div><div class="color-name">Background</div><div class="color-value">--background</div></div>
+    <div class="card"><div class="color-swatch" style="background: hsl(var(--foreground));"></div><div class="color-name">Foreground</div><div class="color-value">--foreground</div></div>
+    <div class="card"><div class="color-swatch" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border));"></div><div class="color-name">Card</div><div class="color-value">--card</div></div>
+    <div class="card"><div class="color-swatch" style="background: hsl(var(--muted));"></div><div class="color-name">Muted</div><div class="color-value">--muted</div></div>
+    <div class="card"><div class="color-swatch" style="background: hsl(var(--indigo));"></div><div class="color-name">Indigo</div><div class="color-value">--indigo</div></div>
+    <div class="card"><div class="color-swatch" style="background: linear-gradient(135deg, hsl(var(--indigo)) 0%, hsl(271 91% 65%) 100%);"></div><div class="color-name">Gradient</div><div class="color-value">indigo → purple</div></div>
+  </div>
+
+  <h2>Category Colors</h2>
+  <div class="flex">
+    <span class="badge badge-cat" style="background: hsl(var(--cat-work) / 0.15); color: hsl(var(--cat-work));"><span class="cat-dot" style="background: hsl(var(--cat-work));"></span> Work</span>
+    <span class="badge badge-cat" style="background: hsl(var(--cat-personal) / 0.15); color: hsl(var(--cat-personal));"><span class="cat-dot" style="background: hsl(var(--cat-personal));"></span> Personal</span>
+    <span class="badge badge-cat" style="background: hsl(var(--cat-social) / 0.15); color: hsl(var(--cat-social));"><span class="cat-dot" style="background: hsl(var(--cat-social));"></span> Social</span>
+    <span class="badge badge-cat" style="background: hsl(var(--cat-marketing) / 0.15); color: hsl(var(--cat-marketing));"><span class="cat-dot" style="background: hsl(var(--cat-marketing));"></span> Marketing</span>
+  </div>
+
+  <h2>Buttons</h2>
+  <div class="flex">
+    <button class="btn btn-primary">Primary</button>
+    <button class="btn btn-secondary">Secondary</button>
+    <button class="btn btn-indigo">Indigo</button>
+    <button class="btn btn-outline">Outline</button>
+    <button class="btn btn-ghost">Ghost</button>
+  </div>
+
+  <h2>Inputs</h2>
+  <div class="grid" style="grid-template-columns: 1fr 1fr;">
+    <input type="text" class="input" placeholder="Text input...">
+    <input type="text" class="input" value="With value">
+  </div>
+
+  <h2>Cards</h2>
+  <div class="grid">
+    <div class="card"><div style="font-weight: 600; margin-bottom: 8px;">Card Title</div><div style="color: hsl(var(--muted-foreground)); font-size: 14px;">Card description text goes here.</div></div>
+    <div class="card"><div style="font-size: 28px; font-weight: 700;">128</div><div style="color: hsl(var(--muted-foreground)); font-size: 14px;">Total Links</div></div>
+  </div>
+
+  <h2>Typography</h2>
+  <div class="card">
+    <div style="font-size: 32px; font-weight: 700; margin-bottom: 8px;">Heading 1</div>
+    <div style="font-size: 24px; font-weight: 600; margin-bottom: 8px;">Heading 2</div>
+    <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Heading 3</div>
+    <div style="font-size: 14px; margin-bottom: 8px;">Body text - The quick brown fox jumps over the lazy dog.</div>
+    <div style="font-size: 14px; color: hsl(var(--muted-foreground));">Muted text - Secondary information displayed here.</div>
+  </div>
+</body>
+</html>`;
+}
+
+// Mobile App Mockup Page
+function getMobileMockupHTML() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkShort - Mobile App Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    .header { text-align: center; color: white; margin-bottom: 32px; }
+    .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .header p { color: rgba(255,255,255,0.6); font-size: 14px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: #818cf8; text-decoration: none; margin-bottom: 24px; }
+    .iphone { width: 375px; height: 812px; background: #1c1c1e; border-radius: 55px; padding: 18px; box-shadow: 0 0 0 3px #2c2c2e, 0 50px 100px -20px rgba(0,0,0,0.5); position: relative; }
+    .iphone::before { content: ''; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 150px; height: 35px; background: #1c1c1e; border-radius: 0 0 20px 20px; z-index: 10; }
+    .screen { width: 100%; height: 100%; background: #0a0a0a; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; font-size: 15px; color: #fafafa; }
+    .status-bar { height: 54px; padding: 14px 28px 0; display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .app-header { padding: 0 20px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .app-title { font-size: 32px; font-weight: 700; }
+    .header-btn { width: 40px; height: 40px; background: #262626; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .search-bar { margin: 0 20px 16px; height: 44px; background: #262626; border-radius: 12px; display: flex; align-items: center; padding: 0 14px; gap: 10px; color: #a1a1aa; }
+    .stats { display: flex; gap: 12px; padding: 0 20px; margin-bottom: 20px; }
+    .stat { flex: 1; background: #171717; border: 1px solid #262626; border-radius: 12px; padding: 14px; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 12px; color: #a1a1aa; }
+    .stat-change { font-size: 11px; color: #22c55e; margin-top: 4px; }
+    .section-header { display: flex; justify-content: space-between; padding: 0 20px; margin-bottom: 12px; }
+    .section-title { font-size: 18px; font-weight: 600; }
+    .section-action { font-size: 14px; color: #818cf8; }
+    .links-list { flex: 1; overflow-y: auto; padding: 0 20px; }
+    .link-card { background: #171717; border: 1px solid #262626; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .link-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .link-code { font-family: monospace; font-size: 16px; color: #818cf8; background: rgba(129,140,248,0.15); padding: 6px 12px; border-radius: 8px; }
+    .link-url { font-size: 14px; color: #a1a1aa; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .link-footer { display: flex; justify-content: space-between; align-items: center; }
+    .link-meta { display: flex; gap: 16px; font-size: 13px; color: #a1a1aa; }
+    .link-clicks { color: #22c55e; }
+    .link-cat { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+    .cat-work { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .cat-social { background: rgba(34,211,238,0.15); color: #22d3ee; }
+    .cat-marketing { background: rgba(251,146,60,0.15); color: #fb923c; }
+    .tab-bar { height: 83px; background: rgba(23,23,23,0.95); backdrop-filter: blur(20px); border-top: 1px solid #262626; display: flex; padding: 8px 0 25px; }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #a1a1aa; font-size: 10px; }
+    .tab.active { color: #818cf8; }
+    .tab-add { width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-top: -20px; box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+    .home-indicator { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; }
+    .nav-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .nav-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 13px; cursor: pointer; }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    .nav-btn.active { background: #6366f1; border-color: #6366f1; }
+    svg { width: 20px; height: 20px; }
+  </style>
+</head>
+<body>
+  <a href="/admin" class="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back to Admin</a>
+  <div class="header"><h1>Mobile App Mockup</h1><p>iPhone companion app design preview</p></div>
+  <div class="iphone">
+    <div class="screen">
+      <div class="status-bar"><span>9:41</span><span>100%</span></div>
+      <div class="app-header">
+        <div class="app-title">Links</div>
+        <div class="header-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/></svg></div>
+      </div>
+      <div class="search-bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span>Search links...</span></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-value">128</div><div class="stat-label">Total Links</div><div class="stat-change">+12 this week</div></div>
+        <div class="stat"><div class="stat-value">4.8K</div><div class="stat-label">Total Clicks</div><div class="stat-change">+523 today</div></div>
+      </div>
+      <div class="section-header"><div class="section-title">Recent Links</div><div class="section-action">See All</div></div>
+      <div class="links-list">
+        <div class="link-card">
+          <div class="link-header"><span class="link-code">/portfolio</span></div>
+          <div class="link-url">https://example.com/my-portfolio-2024</div>
+          <div class="link-footer"><div class="link-meta"><span class="link-clicks">1,234 clicks</span><span>2d ago</span></div><span class="link-cat cat-work">Work</span></div>
+        </div>
+        <div class="link-card">
+          <div class="link-header"><span class="link-code">/twitter</span></div>
+          <div class="link-url">https://twitter.com/username</div>
+          <div class="link-footer"><div class="link-meta"><span class="link-clicks">856 clicks</span><span>5d ago</span></div><span class="link-cat cat-social">Social</span></div>
+        </div>
+        <div class="link-card">
+          <div class="link-header"><span class="link-code">/promo</span></div>
+          <div class="link-url">https://producthunt.com/posts/app</div>
+          <div class="link-footer"><div class="link-meta"><span class="link-clicks">2,341 clicks</span><span>1w ago</span></div><span class="link-cat cat-marketing">Marketing</span></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Links</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+        <div class="tab"><div class="tab-add"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>Categories</div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>Settings</div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
 </body>
 </html>`;
 }
