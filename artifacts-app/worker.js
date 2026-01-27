@@ -79,7 +79,8 @@ export default {
       });
     }
 
-    // Serve PWA icons as purple gradient cubes
+    // Serve PWA icons dynamically as SVG with purple gradient background and 3D cube logo.
+    // Generated on-the-fly to avoid needing separate image files - SVG scales perfectly for any size.
     if (path === 'icon-192.png' || path === 'icon-512.png') {
       const size = path === 'icon-192.png' ? 192 : 512;
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
@@ -97,13 +98,17 @@ export default {
       </svg>`;
 
       return new Response(svg, {
-        headers: { 'Content-Type': 'image/svg+xml' }
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=86400'
+        }
       });
     }
 
     // ============ MAIN APP UI ============
 
-    if (!path || path === 'admin' || path === '') {
+    // Serve main app for root path, empty path, or /admin
+    if (path === '' || path === 'admin') {
       if (!userEmail) {
         return new Response('Unauthorized', { status: 401 });
       }
@@ -1917,7 +1922,7 @@ function getAppHtml(userEmail) {
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" placeholder="Search..." id="search-input">
+        <input type="text" placeholder="Search..." id="search-input" aria-label="Search artifacts">
         <button class="clear-search" id="clear-search" onclick="clearSearch()" title="Clear search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2232,7 +2237,7 @@ function getAppHtml(userEmail) {
 
     // Close menu when clicking a nav item on mobile
     function handleNavClick(callback) {
-      if (window.innerWidth <= 768) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
         closeMobileMenu();
       }
       if (callback) callback();
@@ -2588,7 +2593,7 @@ function getAppHtml(userEmail) {
       currentFilter = { type, value };
 
       // Close mobile menu if open
-      if (window.innerWidth <= 768) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
         closeMobileMenu();
       }
 
