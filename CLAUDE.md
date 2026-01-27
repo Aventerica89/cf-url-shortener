@@ -66,14 +66,14 @@ The UI uses Shadcn-style CSS variables. To test UI changes:
 
 ### What It Is
 
-A **separate** Cloudflare Worker app for tracking Claude.ai artifacts. Lives in `artifacts-app/` directory. Now deployed and working at `artifact-manager.jbmd-creations.workers.dev`.
+A **separate** Cloudflare Worker app for tracking Claude.ai artifacts. Lives in `artifacts-app/` directory.
 
 ### Architecture - Two Separate Apps
 
 | App | Directory | Worker Name | D1 Database ID | URL |
 |-----|-----------|-------------|----------------|-----|
-| URL Shortener | root | `url-shortener` | `b47f73ea-a441-4f8f-986b-5080a7d2a1c9` | `links.jbcloud.app` |
-| Artifact Manager | `artifacts-app/` | `artifact-manager` | `cf8e4875-7222-4186-8d57-be6ba55cc12a` | `artifact-manager.jbmd-creations.workers.dev` |
+| URL Shortener | root | `url-shortener` | (see wrangler.toml) | (your custom domain) |
+| Artifact Manager | `artifacts-app/` | `artifact-manager` | (see artifacts-app/wrangler.toml) | (your-subdomain.workers.dev) |
 
 ### Deployment - Two Separate Workflows
 
@@ -114,9 +114,9 @@ All XSS vulnerabilities fixed:
 
 ### User Info
 
-- Account: JBMD Creations
-- Email: john@jbmdcreations.com
-- Workers subdomain: jbmd-creations.workers.dev
+- Account: (see Cloudflare dashboard)
+- Email: (from Cloudflare Access JWT)
+- Workers subdomain: (your-subdomain.workers.dev)
 
 ---
 
