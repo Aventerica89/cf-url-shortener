@@ -1,4 +1,5 @@
-// LinkShort Mobile App - Expo Snack Demo
+// LinkShort Mobile App - Expo Snack Demo v2
+// Matches the mockup design at links.jbcloud.app/mobile-mockup
 // Paste this entire file into App.js at https://snack.expo.dev
 
 import React, { useState } from 'react';
@@ -15,7 +16,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-// Design tokens (Shadcn dark theme)
+// Design tokens (matching mockup exactly)
 const colors = {
   background: '#0a0a0a',
   foreground: '#fafafa',
@@ -24,11 +25,13 @@ const colors = {
   mutedForeground: '#a1a1aa',
   border: '#262626',
   indigo: '#818cf8',
+  indigoBg: 'rgba(129,140,248,0.15)',
+  green: '#22c55e',
   categories: {
-    work: '#a855f7',
-    personal: '#ec4899',
-    social: '#06b6d4',
-    marketing: '#f97316',
+    work: { bg: 'rgba(167,139,250,0.15)', text: '#a78bfa' },
+    social: { bg: 'rgba(34,211,238,0.15)', text: '#22d3ee' },
+    marketing: { bg: 'rgba(251,146,60,0.15)', text: '#fb923c' },
+    personal: { bg: 'rgba(236,72,153,0.15)', text: '#ec4899' },
   },
 };
 
@@ -36,54 +39,48 @@ const colors = {
 const MOCK_LINKS = [
   {
     code: 'portfolio',
-    destination: 'https://jbcloud.app/my-portfolio-page',
-    clicks: 1247,
+    destination: 'https://example.com/my-portfolio-2024',
+    clicks: 1234,
     category_name: 'Work',
     category_color: 'work',
-    created_at: '2026-01-15T10:00:00Z',
-    tags: ['website', 'main'],
+    created_at: '2026-01-26T10:00:00Z',
   },
   {
     code: 'twitter',
-    destination: 'https://twitter.com/yourhandle',
-    clicks: 892,
+    destination: 'https://twitter.com/username',
+    clicks: 856,
     category_name: 'Social',
     category_color: 'social',
-    created_at: '2026-01-20T14:30:00Z',
-    tags: ['social'],
+    created_at: '2026-01-23T14:30:00Z',
   },
   {
-    code: 'newsletter',
-    destination: 'https://newsletter.example.com/subscribe',
-    clicks: 456,
+    code: 'promo',
+    destination: 'https://producthunt.com/posts/app',
+    clicks: 2341,
     category_name: 'Marketing',
     category_color: 'marketing',
-    created_at: '2026-01-22T09:15:00Z',
-    tags: ['email', 'promo'],
-    is_protected: true,
+    created_at: '2026-01-21T09:15:00Z',
   },
   {
     code: 'blog',
     destination: 'https://blog.jbcloud.app/latest-post',
-    clicks: 234,
+    clicks: 445,
     category_name: 'Personal',
     category_color: 'personal',
     created_at: '2026-01-25T16:45:00Z',
-    tags: [],
   },
   {
     code: 'github',
     destination: 'https://github.com/yourusername',
-    clicks: 178,
+    clicks: 678,
     category_name: 'Work',
     category_color: 'work',
-    created_at: '2026-01-26T11:00:00Z',
-    tags: ['code', 'dev'],
+    created_at: '2026-01-24T11:00:00Z',
   },
 ];
 
-// Stats Card Component
-function StatsCard({ icon, value, label }) {
+// Stats Card Component (matching mockup)
+function StatsCard({ value, label, change }) {
   const formatNumber = (num) => {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
@@ -91,81 +88,62 @@ function StatsCard({ icon, value, label }) {
 
   return (
     <View style={styles.statsCard}>
-      <View style={styles.statsIcon}>
-        <Feather name={icon} size={18} color={colors.indigo} />
-      </View>
       <Text style={styles.statsValue}>{formatNumber(value)}</Text>
       <Text style={styles.statsLabel}>{label}</Text>
+      <Text style={styles.statsChange}>{change}</Text>
     </View>
   );
 }
 
-// Link Card Component
-function LinkCard({ link, onPress, onCopy }) {
+// Link Card Component (matching mockup design)
+function LinkCard({ link, onPress }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return '1d ago';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return `${Math.floor(diffDays / 7)}w ago`;
   };
 
-  const truncateUrl = (url, maxLength = 32) => {
-    const clean = url.replace(/^https?:\/\//, '');
-    return clean.length <= maxLength ? clean : clean.substring(0, maxLength) + '...';
+  const formatClicks = (num) => {
+    if (num >= 1000) return (num / 1000).toFixed(0) + ',' + (num % 1000).toString().padStart(3, '0').slice(0, 3);
+    return num.toLocaleString();
   };
 
-  const getCategoryColor = (colorName) => {
-    return colors.categories[colorName] || colors.mutedForeground;
+  const getCategoryStyle = (colorName) => {
+    return colors.categories[colorName] || { bg: colors.muted, text: colors.mutedForeground };
   };
+
+  const catStyle = getCategoryStyle(link.category_color);
 
   return (
     <TouchableOpacity style={styles.linkCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.linkContent}>
-        {/* Short URL */}
-        <View style={styles.linkRow}>
-          <View style={styles.codeContainer}>
-            {link.is_protected && (
-              <Feather name="lock" size={12} color={colors.indigo} style={{ marginRight: 4 }} />
-            )}
-            <Text style={styles.linkCode}>/{link.code}</Text>
-          </View>
-          <TouchableOpacity onPress={onCopy} style={styles.copyBtn}>
-            <Feather name="copy" size={16} color={colors.mutedForeground} />
-          </TouchableOpacity>
+      {/* Link code badge */}
+      <View style={styles.linkHeader}>
+        <View style={styles.linkCodeBadge}>
+          <Text style={styles.linkCodeText}>/{link.code}</Text>
         </View>
-
-        {/* Destination */}
-        <Text style={styles.linkDest} numberOfLines={1}>
-          {truncateUrl(link.destination)}
-        </Text>
-
-        {/* Meta row */}
-        <View style={styles.metaRow}>
-          {link.category_name && (
-            <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(link.category_color) + '20' }]}>
-              <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(link.category_color) }]} />
-              <Text style={[styles.categoryText, { color: getCategoryColor(link.category_color) }]}>
-                {link.category_name}
-              </Text>
-            </View>
-          )}
-          <View style={styles.clicksContainer}>
-            <Feather name="mouse-pointer" size={12} color={colors.mutedForeground} />
-            <Text style={styles.clicksText}>{link.clicks}</Text>
-          </View>
-          <Text style={styles.dateText}>{formatDate(link.created_at)}</Text>
-        </View>
-
-        {/* Tags */}
-        {link.tags && link.tags.length > 0 && (
-          <View style={styles.tagsRow}>
-            {link.tags.slice(0, 3).map((tag, i) => (
-              <View key={i} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        )}
       </View>
-      <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+
+      {/* Destination URL */}
+      <Text style={styles.linkUrl} numberOfLines={1}>
+        {link.destination}
+      </Text>
+
+      {/* Footer: clicks, date, category */}
+      <View style={styles.linkFooter}>
+        <View style={styles.linkMeta}>
+          <Text style={styles.linkClicks}>{formatClicks(link.clicks)} clicks</Text>
+          <Text style={styles.linkDate}>{formatDate(link.created_at)}</Text>
+        </View>
+        <View style={[styles.categoryBadge, { backgroundColor: catStyle.bg }]}>
+          <Text style={[styles.categoryText, { color: catStyle.text }]}>
+            {link.category_name}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -176,8 +154,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('links');
 
-  const totalLinks = links.length;
-  const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0);
+  const totalLinks = 128;
+  const totalClicks = 4800;
 
   const filteredLinks = links.filter(
     (l) =>
@@ -185,24 +163,42 @@ export default function App() {
       l.destination.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCopy = (code) => {
-    Alert.alert('Copied!', `links.jbcloud.app/${code} copied to clipboard`);
-  };
-
   const handleLinkPress = (link) => {
     Alert.alert(link.code, `Destination: ${link.destination}\nClicks: ${link.clicks}`);
   };
 
   const renderHeader = () => (
     <View style={styles.header}>
-      {/* Stats */}
+      {/* Stats row */}
       <View style={styles.statsRow}>
-        <StatsCard icon="link" value={totalLinks} label="Total Links" />
-        <StatsCard icon="mouse-pointer" value={totalClicks} label="Total Clicks" />
+        <StatsCard value={totalLinks} label="Total Links" change="+12 this week" />
+        <StatsCard value={totalClicks} label="Total Clicks" change="+523 today" />
       </View>
 
-      {/* Search */}
-      <View style={styles.searchContainer}>
+      {/* Section header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Recent Links</Text>
+        <TouchableOpacity>
+          <Text style={styles.sectionAction}>See All</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+
+      {/* App header */}
+      <View style={styles.appHeader}>
+        <Text style={styles.appTitle}>Links</Text>
+        <TouchableOpacity style={styles.headerBtn}>
+          <Feather name="bell" size={20} color={colors.foreground} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search bar */}
+      <View style={styles.searchBar}>
         <Feather name="search" size={18} color={colors.mutedForeground} />
         <TextInput
           style={styles.searchInput}
@@ -218,52 +214,28 @@ export default function App() {
         )}
       </View>
 
-      {/* Section header */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent Links</Text>
-        <Text style={styles.sectionCount}>{filteredLinks.length} links</Text>
-      </View>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-
-      {/* Title bar */}
-      <View style={styles.titleBar}>
-        <Text style={styles.title}>Links</Text>
-        <TouchableOpacity style={styles.profileBtn}>
-          <Feather name="user" size={20} color={colors.foreground} />
-        </TouchableOpacity>
-      </View>
-
       {/* Links list */}
       <FlatList
         data={filteredLinks}
         keyExtractor={(item) => item.code}
         renderItem={({ item }) => (
-          <LinkCard
-            link={item}
-            onPress={() => handleLinkPress(item)}
-            onCopy={() => handleCopy(item.code)}
-          />
+          <LinkCard link={item} onPress={() => handleLinkPress(item)} />
         )}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Tab bar */}
+      {/* Tab bar (matching mockup) */}
       <View style={styles.tabBar}>
         <TouchableOpacity
-          style={styles.tabItem}
+          style={styles.tab}
           onPress={() => setActiveTab('links')}
         >
           <Feather
             name="link"
-            size={22}
-            color={activeTab === 'links' ? colors.foreground : colors.mutedForeground}
+            size={20}
+            color={activeTab === 'links' ? colors.indigo : colors.mutedForeground}
           />
           <Text style={[styles.tabLabel, activeTab === 'links' && styles.tabLabelActive]}>
             Links
@@ -271,37 +243,37 @@ export default function App() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.tabItem}
+          style={styles.tab}
           onPress={() => setActiveTab('analytics')}
         >
           <Feather
             name="bar-chart-2"
-            size={22}
-            color={activeTab === 'analytics' ? colors.foreground : colors.mutedForeground}
+            size={20}
+            color={activeTab === 'analytics' ? colors.indigo : colors.mutedForeground}
           />
           <Text style={[styles.tabLabel, activeTab === 'analytics' && styles.tabLabelActive]}>
             Analytics
           </Text>
         </TouchableOpacity>
 
-        {/* Center add button */}
+        {/* Center add button - gradient rounded square */}
         <TouchableOpacity
-          style={styles.addButton}
+          style={styles.tabAddContainer}
           onPress={() => Alert.alert('Create Link', 'This would open the create link form')}
         >
-          <View style={styles.addButtonInner}>
-            <Feather name="plus" size={28} color="#fff" />
+          <View style={styles.tabAddBtn}>
+            <Feather name="plus" size={26} color="#fff" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.tabItem}
+          style={styles.tab}
           onPress={() => setActiveTab('categories')}
         >
           <Feather
-            name="folder"
-            size={22}
-            color={activeTab === 'categories' ? colors.foreground : colors.mutedForeground}
+            name="grid"
+            size={20}
+            color={activeTab === 'categories' ? colors.indigo : colors.mutedForeground}
           />
           <Text style={[styles.tabLabel, activeTab === 'categories' && styles.tabLabelActive]}>
             Categories
@@ -309,13 +281,13 @@ export default function App() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.tabItem}
+          style={styles.tab}
           onPress={() => setActiveTab('settings')}
         >
           <Feather
-            name="settings"
-            size={22}
-            color={activeTab === 'settings' ? colors.foreground : colors.mutedForeground}
+            name="sun"
+            size={20}
+            color={activeTab === 'settings' ? colors.indigo : colors.mutedForeground}
           />
           <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>
             Settings
@@ -331,19 +303,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  titleBar: {
+  appHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
-  title: {
+  appTitle: {
     fontSize: 32,
     fontWeight: '700',
     color: colors.foreground,
   },
-  profileBtn: {
+  headerBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -351,14 +323,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.muted,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 44,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.foreground,
+    fontSize: 15,
+  },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 12,
   },
   statsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   statsCard: {
     flex: 1,
@@ -366,17 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statsIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.indigo + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
+    padding: 14,
   },
   statsValue: {
     fontSize: 24,
@@ -384,126 +362,84 @@ const styles = StyleSheet.create({
     color: colors.foreground,
   },
   statsLabel: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.mutedForeground,
-    marginTop: 2,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.muted,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 44,
-    gap: 8,
-    marginBottom: 20,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.foreground,
-    fontSize: 15,
+  statsChange: {
+    fontSize: 11,
+    color: colors.green,
+    marginTop: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.foreground,
   },
-  sectionCount: {
-    fontSize: 13,
-    color: colors.mutedForeground,
+  sectionAction: {
+    fontSize: 14,
+    color: colors.indigo,
   },
   linkCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: colors.card,
     marginHorizontal: 20,
-    marginTop: 12,
+    marginBottom: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
   },
-  linkContent: {
-    flex: 1,
+  linkHeader: {
+    marginBottom: 10,
   },
-  linkRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+  linkCodeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.indigoBg,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  codeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  linkCodeText: {
+    fontFamily: 'monospace',
+    fontSize: 16,
+    color: colors.indigo,
+    fontWeight: '500',
   },
-  linkCode: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  copyBtn: {
-    padding: 4,
-  },
-  linkDest: {
-    fontSize: 13,
+  linkUrl: {
+    fontSize: 14,
     color: colors.mutedForeground,
     marginBottom: 12,
   },
-  metaRow: {
+  linkFooter: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
+  },
+  linkMeta: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  linkClicks: {
+    fontSize: 13,
+    color: colors.green,
+  },
+  linkDate: {
+    fontSize: 13,
+    color: colors.mutedForeground,
   },
   categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
-    gap: 4,
-  },
-  categoryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   categoryText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
-  },
-  clicksContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  clicksText: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-  },
-  dateText: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: colors.muted,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  tagText: {
-    fontSize: 11,
-    color: colors.mutedForeground,
   },
   tabBar: {
     position: 'absolute',
@@ -511,41 +447,41 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    backgroundColor: colors.card + 'F0',
+    backgroundColor: 'rgba(23,23,23,0.95)',
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingBottom: 20,
+    paddingBottom: 25,
     paddingTop: 8,
     justifyContent: 'space-around',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
-  tabItem: {
+  tab: {
     alignItems: 'center',
-    paddingVertical: 4,
+    gap: 4,
     minWidth: 60,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.mutedForeground,
-    marginTop: 2,
   },
   tabLabelActive: {
-    color: colors.foreground,
+    color: colors.indigo,
   },
-  addButton: {
-    marginTop: -30,
+  tabAddContainer: {
+    marginTop: -20,
   },
-  addButtonInner: {
+  tabAddBtn: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.indigo,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.indigo,
+    // Gradient effect approximation
+    backgroundColor: '#6366f1',
+    shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 8,
   },
 });
