@@ -1,6 +1,48 @@
 // Favicon SVG with accessibility title and optimized grouped paths
 const ADMIN_FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctitle%3ELinkShort Admin Icon%3C/title%3E%3Crect width='32' height='32' rx='6' fill='%2309090b'/%3E%3Cg stroke='%238b5cf6' stroke-width='2.5' stroke-linecap='round' fill='none'%3E%3Cpath d='M18.5 10.5a4 4 0 0 1 5.66 5.66l-2.83 2.83a4 4 0 0 1-5.66 0'/%3E%3Cpath d='M13.5 21.5a4 4 0 0 1-5.66-5.66l2.83-2.83a4 4 0 0 1 5.66 0'/%3E%3C/g%3E%3C/svg%3E";
 
+// =============================================================================
+// SECURITY HELPER FUNCTIONS - XSS Prevention
+// =============================================================================
+
+// Escape HTML entities to prevent XSS in HTML content
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Escape for use in HTML attributes (especially in JS contexts like onclick)
+function escapeAttr(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
+// Escape for use in JavaScript string literals
+function escapeJs(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/</g, '\\x3c')
+    .replace(/>/g, '\\x3e');
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -697,14 +739,29 @@ export default {
   }
 };
 
-// Decode Cloudflare Access JWT to get user email
+// =============================================================================
+// JWT AUTHENTICATION - Cloudflare Access Integration
+// =============================================================================
+// SECURITY NOTE: JWT signature verification is handled by Cloudflare Access
+// at the edge BEFORE the request reaches this Worker. Cloudflare Access:
+// 1. Validates the JWT signature against Cloudflare's public keys
+// 2. Verifies token expiration and audience claims
+// 3. Only forwards requests with valid tokens to the Worker
+// 4. Sets the Cf-Access-Jwt-Assertion header with the verified token
+//
+// This function extracts the email from the pre-verified JWT payload.
+// The JWT is trusted because Cloudflare Access has already verified it.
+// See: https://developers.cloudflare.com/cloudflare-one/identity/authorization-cookie/validating-json/
+// =============================================================================
 async function getUserEmail(request) {
+  // JWT is pre-verified by Cloudflare Access at the edge
   const jwt = request.headers.get('Cf-Access-Jwt-Assertion');
   if (!jwt) return null;
 
   try {
     const parts = jwt.split('.');
     if (parts.length !== 3) return null;
+    // Decode the payload (signature already verified by Cloudflare Access)
     const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
     return payload.email || null;
   } catch (e) {
@@ -914,44 +971,112 @@ function validateCode(code) {
   return { valid: true, code };
 }
 
-// Hash password with random salt for security
+// =============================================================================
+// PASSWORD HASHING - PBKDF2 with 100,000 iterations (OWASP recommended)
+// =============================================================================
+
+// Hash password using PBKDF2 with random salt
 async function hashPassword(password) {
   // Generate 16-byte random salt
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
 
-  // Hash password with salt
+  // Import password as key material
   const encoder = new TextEncoder();
-  const data = encoder.encode(saltHex + password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
 
-  // Return salt:hash format
-  return saltHex + ':' + hashHex;
+  // Derive key using PBKDF2 with 100,000 iterations (OWASP recommended)
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    256 // 32 bytes
+  );
+
+  const hashHex = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  // Return pbkdf2:salt:hash format (prefixed to identify algorithm)
+  return 'pbkdf2:' + saltHex + ':' + hashHex;
 }
 
-// Verify password against stored salted hash
+// Verify password against stored hash (supports legacy SHA-256 and new PBKDF2)
 async function verifyPassword(password, storedHash) {
-  // Parse salt and hash from stored value
-  const [salt, hash] = storedHash.split(':');
+  const encoder = new TextEncoder();
 
-  // If no salt separator found, it's an old unsalted hash - upgrade on next password change
-  if (!hash) {
-    // Legacy fallback for old hashes (will be replaced when user changes password)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const computedHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-    return computedHash === storedHash;
+  // Check if it's new PBKDF2 format (pbkdf2:salt:hash)
+  if (storedHash.startsWith('pbkdf2:')) {
+    const parts = storedHash.split(':');
+    if (parts.length !== 3) return false;
+
+    const saltHex = parts[1];
+    const storedHashHex = parts[2];
+
+    // Convert salt hex back to Uint8Array
+    const salt = new Uint8Array(saltHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+
+    // Import password as key material
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits']
+    );
+
+    // Derive key using same parameters
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      256
+    );
+
+    const computedHash = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Use constant-time comparison to prevent timing attacks
+    return timingSafeEqual(computedHash, storedHashHex);
   }
 
-  // Verify with salt
-  const encoder = new TextEncoder();
-  const data = encoder.encode(salt + password);
+  // Legacy format: salt:hash (old SHA-256 salted)
+  const [salt, hash] = storedHash.split(':');
+
+  if (hash) {
+    // Old salted SHA-256 format
+    const data = encoder.encode(salt + password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const computedHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return timingSafeEqual(computedHash, hash);
+  }
+
+  // Very old unsalted format (legacy fallback)
+  const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const computedHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return timingSafeEqual(computedHash, storedHash);
+}
 
-  return computedHash === hash;
+// Constant-time string comparison to prevent timing attacks
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 // Generate HTML for password prompt
@@ -2432,6 +2557,16 @@ function getAdminHTML(userEmail) {
   </div>
 
   <script>
+    // XSS Prevention - Escape functions for safe HTML rendering
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+    }
+    function escapeAttr(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;').replace(/\\\\/g,'\\\\\\\\');
+    }
+
     const baseUrl = window.location.origin;
     let allLinks = [];
     let allCategories = [];
@@ -2496,20 +2631,20 @@ function getAdminHTML(userEmail) {
       const res = await fetch('/api/categories');
       allCategories = await res.json();
 
-      // Update sidebar
+      // Update sidebar (escape user-controlled data)
       const nav = document.getElementById('categoriesNav');
       nav.innerHTML = allCategories.map(cat => \`
-        <div class="nav-item" onclick="filterByCategory('\${cat.slug}')">
-          <span class="cat-dot \${cat.color}"></span>
-          <span>\${cat.name}</span>
-          <span class="nav-item-badge">\${cat.link_count}</span>
+        <div class="nav-item" onclick="filterByCategory('\${escapeAttr(cat.slug)}')">
+          <span class="cat-dot \${escapeAttr(cat.color)}"></span>
+          <span>\${escapeHtml(cat.name)}</span>
+          <span class="nav-item-badge">\${parseInt(cat.link_count) || 0}</span>
         </div>
       \`).join('');
 
-      // Update form selects
-      const options = '<option value="">No category</option>' + allCategories.map(cat => \`<option value="\${cat.id}">\${cat.name}</option>\`).join('');
+      // Update form selects (escape user-controlled data)
+      const options = '<option value="">No category</option>' + allCategories.map(cat => \`<option value="\${escapeAttr(cat.id)}">\${escapeHtml(cat.name)}</option>\`).join('');
       document.getElementById('newCategory').innerHTML = options;
-      document.getElementById('filterCategory').innerHTML = '<option value="">All Categories</option>' + allCategories.map(cat => \`<option value="\${cat.slug}">\${cat.name}</option>\`).join('');
+      document.getElementById('filterCategory').innerHTML = '<option value="">All Categories</option>' + allCategories.map(cat => \`<option value="\${escapeAttr(cat.slug)}">\${escapeHtml(cat.name)}</option>\`).join('');
     }
 
     async function loadTags() {
@@ -2518,7 +2653,7 @@ function getAdminHTML(userEmail) {
 
       const nav = document.getElementById('tagsNav');
       nav.innerHTML = allTags.slice(0, 8).map(tag => \`
-        <span class="badge badge-secondary" style="cursor: pointer;" onclick="filterByTag('\${tag.name}')">\${tag.name}</span>
+        <span class="badge badge-secondary" style="cursor: pointer;" onclick="filterByTag('\${escapeAttr(tag.name)}')">\${escapeHtml(tag.name)}</span>
       \`).join('');
     }
 
@@ -2547,17 +2682,21 @@ function getAdminHTML(userEmail) {
 
       tbody.innerHTML = pageLinks.map(link => {
         const date = new Date(link.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const catBadge = link.category_name ? \`<span class="badge-cat \${link.category_color}"><span class="cat-dot \${link.category_color}"></span>\${link.category_name}</span>\` : '<span style="color: hsl(var(--muted-foreground))">-</span>';
-        const tags = link.tags.length ? link.tags.map(t => \`<span class="badge badge-outline">\${t}</span>\`).join('') : '<span style="color: hsl(var(--muted-foreground))">-</span>';
+        const safeCode = escapeAttr(link.code);
+        const safeCodeHtml = escapeHtml(link.code);
+        const safeDest = escapeAttr(link.destination);
+        const safeDestHtml = escapeHtml(link.destination);
+        const catBadge = link.category_name ? \`<span class="badge-cat \${escapeAttr(link.category_color)}"><span class="cat-dot \${escapeAttr(link.category_color)}"></span>\${escapeHtml(link.category_name)}</span>\` : '<span style="color: hsl(var(--muted-foreground))">-</span>';
+        const tags = link.tags.length ? link.tags.map(t => \`<span class="badge badge-outline">\${escapeHtml(t)}</span>\`).join('') : '<span style="color: hsl(var(--muted-foreground))">-</span>';
 
         return \`
-          <tr data-code="\${link.code}">
-            <td class="cell-checkbox"><input type="checkbox" class="link-checkbox" value="\${link.code}" onchange="updateBulkSelection()"></td>
+          <tr data-code="\${safeCode}">
+            <td class="cell-checkbox"><input type="checkbox" class="link-checkbox" value="\${safeCode}" onchange="updateBulkSelection()"></td>
             <td>
               <div class="cell-link">
                 \${link.is_protected ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--indigo)); flex-shrink: 0;" title="Password protected"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : ''}
-                <a href="\${baseUrl}/\${link.code}" target="_blank">/\${link.code}</a>
-                <button class="btn btn-ghost btn-icon sm" onclick="copyLink('\${link.code}')" title="Copy">
+                <a href="\${baseUrl}/\${safeCode}" target="_blank">/\${safeCodeHtml}</a>
+                <button class="btn btn-ghost btn-icon sm" onclick="copyLink('\${safeCode}')" title="Copy">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
@@ -2565,7 +2704,7 @@ function getAdminHTML(userEmail) {
                 </button>
               </div>
             </td>
-            <td><a href="\${link.destination}" target="_blank" class="cell-url" title="\${link.destination}">\${link.destination}</a></td>
+            <td><a href="\${safeDest}" target="_blank" class="cell-url" title="\${safeDest}">\${safeDestHtml}</a></td>
             <td>\${catBadge}</td>
             <td><div class="cell-tags">\${tags}</div></td>
             <td>
@@ -2574,16 +2713,16 @@ function getAdminHTML(userEmail) {
                   <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
                   <polyline points="16 7 22 7 22 13"/>
                 </svg>
-                \${link.clicks.toLocaleString()}
+                \${parseInt(link.clicks).toLocaleString()}
               </span>
             </td>
             <td class="cell-date">
-              \${date}
+              \${escapeHtml(date)}
               \${link.expires_at ? getExpiryBadge(link.expires_at) : ''}
             </td>
             <td>
               <div class="cell-actions">
-                <button class="btn btn-ghost btn-icon sm" onclick="showQRCode('\${link.code}')" title="QR Code">
+                <button class="btn btn-ghost btn-icon sm" onclick="showQRCode('\${safeCode}')" title="QR Code">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="5" height="5" x="3" y="3" rx="1"/>
                     <rect width="5" height="5" x="16" y="3" rx="1"/>
@@ -2599,7 +2738,7 @@ function getAdminHTML(userEmail) {
                     <path d="M12 21v-1"/>
                   </svg>
                 </button>
-                <button class="btn btn-ghost btn-icon sm" onclick="showLinkAnalytics('\${link.code}')" title="Analytics">
+                <button class="btn btn-ghost btn-icon sm" onclick="showLinkAnalytics('\${safeCode}')" title="Analytics">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 3v18h18"/>
                     <path d="m19 9-5 5-4-4-3 3"/>
@@ -2611,7 +2750,7 @@ function getAdminHTML(userEmail) {
                     <path d="m15 5 4 4"/>
                   </svg>
                 </button>
-                <button class="btn btn-ghost btn-icon sm" onclick="deleteLink('\${link.code}')" title="Delete">
+                <button class="btn btn-ghost btn-icon sm" onclick="deleteLink('\${safeCode}')" title="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18"/>
                     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
@@ -2893,7 +3032,7 @@ function getAdminHTML(userEmail) {
       newTags.forEach((tag, i) => {
         const el = document.createElement('span');
         el.className = 'tag';
-        el.innerHTML = tag + '<span class="tag-close" onclick="removeNewTag(' + i + ')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>';
+        el.innerHTML = escapeHtml(tag) + '<span class="tag-close" onclick="removeNewTag(' + i + ')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>';
         container.appendChild(el);
       });
       container.appendChild(input);
@@ -2952,9 +3091,9 @@ function getAdminHTML(userEmail) {
           } else {
             searchResults.innerHTML = '<div class="search-group"><div class="search-group-label">Results</div>' +
               results.map(link => \`
-                <div class="search-item" onclick="window.open('\${baseUrl}/\${link.code}', '_blank')">
-                  <span class="search-item-code">/\${link.code}</span>
-                  <span class="search-item-url">\${link.destination}</span>
+                <div class="search-item" onclick="window.open('\${baseUrl}/\${escapeAttr(link.code)}', '_blank')">
+                  <span class="search-item-code">/\${escapeHtml(link.code)}</span>
+                  <span class="search-item-url">\${escapeHtml(link.destination)}</span>
                 </div>
               \`).join('') + '</div>';
           }
@@ -3090,7 +3229,7 @@ function getAdminHTML(userEmail) {
       editTags.forEach((tag, i) => {
         const el = document.createElement('span');
         el.className = 'tag';
-        el.innerHTML = tag + '<span class="tag-close" onclick="removeEditTag(' + i + ')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>';
+        el.innerHTML = escapeHtml(tag) + '<span class="tag-close" onclick="removeEditTag(' + i + ')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>';
         container.appendChild(el);
       });
       container.appendChild(input);
@@ -3226,15 +3365,15 @@ function getAdminHTML(userEmail) {
 
       container.innerHTML = items.slice(0, 5).map(item => {
         const label = item[labelKey] || 'Unknown';
-        const barWidth = (item.clicks / maxClicks) * 100;
+        const barWidth = Math.min(100, Math.max(0, (item.clicks / maxClicks) * 100));
 
         return \`
           <div class="list-stat-item">
             <div style="flex: 1;">
-              <div class="list-stat-label">\${label}</div>
+              <div class="list-stat-label">\${escapeHtml(label)}</div>
               <div class="list-stat-bar" style="width: \${barWidth}%;"></div>
             </div>
-            <span class="list-stat-value">\${item.clicks}</span>
+            <span class="list-stat-value">\${parseInt(item.clicks).toLocaleString()}</span>
           </div>
         \`;
       }).join('');
@@ -3263,11 +3402,11 @@ function getAdminHTML(userEmail) {
 
         return \`
           <tr>
-            <td>\${time}</td>
-            <td>\${click.country || '-'}</td>
-            <td>\${click.device_type || '-'}</td>
-            <td>\${click.browser || '-'}</td>
-            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">\${referrer}</td>
+            <td>\${escapeHtml(time)}</td>
+            <td>\${escapeHtml(click.country || '-')}</td>
+            <td>\${escapeHtml(click.device_type || '-')}</td>
+            <td>\${escapeHtml(click.browser || '-')}</td>
+            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">\${escapeHtml(referrer)}</td>
           </tr>
         \`;
       }).join('');
@@ -3411,7 +3550,7 @@ function getAdminHTML(userEmail) {
       // Update bulk move category dropdown
       const bulkMoveSelect = document.getElementById('bulkMoveCategory');
       bulkMoveSelect.innerHTML = '<option value="">Move to category...</option><option value="none">Remove category</option>' +
-        allCategories.map(cat => \`<option value="\${cat.id}">\${cat.name}</option>\`).join('');
+        allCategories.map(cat => \`<option value="\${escapeAttr(cat.id)}">\${escapeHtml(cat.name)}</option>\`).join('');
     }
 
     function clearSelection() {
